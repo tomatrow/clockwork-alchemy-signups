@@ -1,3 +1,5 @@
+import type { PageLoad } from './$types';
+
 const workshops = [1,2,3,4].map(id => ({
     id,
     title: "Workshop Title " + id,
@@ -33,7 +35,7 @@ const workshops = [1,2,3,4].map(id => ({
     ]
 }))
 
-export async function get() {
+export const load = (() => {
     return {
         body: {
             title: "Register for workshops taught by Catherine Johnson",
@@ -41,4 +43,4 @@ export async function get() {
             workshops
         }
     }
-}
+}) satisfies PageLoad

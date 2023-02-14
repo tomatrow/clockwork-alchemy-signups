@@ -1,18 +1,17 @@
-<script>
+<script lang="ts">
+    import type { PageData } from './$types';
     import { formatMoney } from "$lib/utility"
     import { slide } from "svelte/transition"
+    
+      export let data: PageData;
 
-    export let title
-    export let description
-    export let workshops
-
-    let checked = {}
+    let checked: Record<string, boolean> = {}
 </script>
 
 
-<h1>{title}</h1>
+<h1>{data.body.title}</h1>
 
-<p>{description}</p>
+<p>{data.body.description}</p>
 
 <form>
     <fieldset>
@@ -26,12 +25,12 @@
         </label>
     </fieldset>
     
-    {#each workshops as { id, title, description, options }}
+    {#each data.body.workshops as { id, title, description, options }}
         <section>
             <h2>{title}</h2>
             <p>{description}</p>
             <fieldset>
-                <input type="hidden" name={id} />
+                <input type="hidden" name={`${id}`} />
                 <label>
                     <input type="checkbox" bind:checked={checked[id]} />
                     <span>Attend</span>
