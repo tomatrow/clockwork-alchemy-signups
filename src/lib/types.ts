@@ -14,6 +14,7 @@ export interface RawWorkshop {
 	slug?: string
 	Name?: string
 	Description?: string
+	Image?: string
 	Location?: string
 	Start?: string
 	End?: string
@@ -39,6 +40,7 @@ export interface Workshop {
 	slug?: string
 	name?: string
 	description?: string
+	imageURL?: string
 	location?: string
 	start?: Date
 	end?: Date

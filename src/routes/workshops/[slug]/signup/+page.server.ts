@@ -19,15 +19,12 @@ export const load = (async ({ parent, params }) => {
 
 export const actions = {
 	async default({ request }) {
-		const data = await request.formData()
-		const name = data.get("name") as string
-		const email = data.get("email") as string
-		const option = data.get("option") as string
+		const data = Object.fromEntries(await request.formData()) as {
+			name?: string
+			email?: string
+			option?: string
+		}
 
-		console.log({
-			name,
-			email,
-			option
-		})
+		console.log(data)
 	}
 } satisfies Actions

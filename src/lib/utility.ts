@@ -1,7 +1,7 @@
 import type { Workshop } from "./types"
 import { startCase } from "lodash"
 import { format } from "date-fns"
-import { omit, mapValues, filter } from "lodash"
+import { set, omit, mapValues, filter } from "lodash"
 import type { Attendee, NonsensitiveAttendee, Leader, NonsensitiveLeader } from "$lib/types"
 
 export function formatMoney(amount: number) {
@@ -53,4 +53,13 @@ export function isURL(value: string) {
 	} catch {
 		return false
 	}
+}
+
+type StructuredFormDataValue = FormDataEntryValue | { [key: string]: StructuredFormDataValue }
+export type StructuredFormData = Record<string, StructuredFormDataValue>
+
+export function getStructuredFormData(formData: FormData) {
+	const data: StructuredFormData = {}
+	formData.forEach((value, path) => set(data, path, value))
+	return data
 }

@@ -3,7 +3,7 @@ import { env } from "$env/dynamic/private"
 import { mapValues } from "lodash"
 import type { Person, RawPerson, Attendee, Workshop, Leader, RawWorkshop } from "./types"
 import { marked } from "marked"
-import { isURL } from "./utility"
+import { isURL, isNotNil } from "./utility"
 
 const base = Airtable.base(env.AIRTABLE_BASE_ID)
 
@@ -88,6 +88,7 @@ export async function getWorkshops(): Promise<Record<string, Workshop>> {
 					id: rawWorkshop.id,
 					slug: rawWorkshop.slug,
 					name: rawWorkshop.Name,
+					imageURL: rawWorkshop.Image,
 					cost: rawWorkshop.Cost,
 					attendeeIds: rawWorkshop.Attendees ?? [],
 					description: rawWorkshop.Description ? marked(rawWorkshop.Description) : undefined,
@@ -102,4 +103,27 @@ export async function getWorkshops(): Promise<Record<string, Workshop>> {
 			})
 			.map((workshop) => [workshop.id, workshop])
 	)
+}
+
+export async function signup({
+	name,
+	email,
+	workshops
+}: {
+	name: string
+	email: string
+	workshops: {
+		id: string
+		option?: string
+	}[]
+}) {
+	return Tables.Attendees.create({
+		Name: name,
+		Email: email,
+		Workshops: workshops.map(({ id }) => id),
+		Options: workshops
+			.flatMap(({ id, option }) => [id, option])
+			.filter(isNotNil)
+			.join("\n")
+	})
 }
