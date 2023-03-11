@@ -1,6 +1,6 @@
 import { getCopy, getAssets, getLeaders, getWorkshops, getAttendees } from "$lib/tables"
 import { getNonsensitiveLeader, getNonsensitiveAttendee} from "$lib/utility"
-import { mapValues } from "lodash"
+import { mapValues } from "lodash-es"
 import type { LayoutServerLoad } from "./$types"
 
 export const load = (async () => {

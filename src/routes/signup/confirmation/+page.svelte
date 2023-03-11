@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from "./$types"
-	import { sortBy, pickBy } from "lodash"
+	import { sortBy, pickBy } from "lodash-es"
 	import { getDisplayDate } from "$lib/utility"
 
 	export let data: PageData

@@ -11,7 +11,7 @@ specifiers:
   date-fns: ^2.29.3
   felte: ^1.2.7
   image-size: ^1.0.2
-  lodash: ^4.17.21
+  lodash-es: ^4.17.21
   marked: ^4.2.12
   postmark: ^3.0.15
   prettier: ^2.8.4
@@ -30,6 +30,7 @@ dependencies:
   date-fns: 2.29.3
   felte: 1.2.7_svelte@3.55.1
   image-size: 1.0.2
+  lodash-es: 4.17.21
   marked: 4.2.12
   postmark: 3.0.15
   svelte-email: 0.0.4
@@ -42,7 +43,6 @@ devDependencies:
   '@types/lodash': 4.14.191
   '@types/marked': 4.0.8
   airtable: 0.11.6
-  lodash: 4.17.21
   prettier: 2.8.4
   prettier-plugin-svelte: 2.9.0_jrsxveqmsx2uadbqiuq74wlc4u
   sass: 1.58.3
@@ -1043,6 +1043,10 @@ packages:
     resolution: {integrity: sha512-SFppqq5p42fe2qcZQqqEOiVRXl+WCP1MdT6k7BDEW1j++sp5fIY+/fdRQitvKgB5BrBcmrs5m/L0v2FrU5MY1g==}
     engines: {node: '>=14'}
     dev: true
+
+  /lodash-es/4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+    dev: false
 
   /lodash/4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}

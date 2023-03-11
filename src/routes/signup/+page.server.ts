@@ -1,6 +1,6 @@
 import {  getCopy, getWorkshops } from "$lib/tables"
 import {  getStructuredFormData, isNotNil } from "$lib/utility"
-import {  pickBy, size, sortBy } from "lodash"
+import {  pickBy, size, sortBy } from "lodash-es"
 import type { PageServerLoad, Actions } from "./$types"
 import { fail, redirect } from "@sveltejs/kit"
 import { signup } from "$lib/tables"

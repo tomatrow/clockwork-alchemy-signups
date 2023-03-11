@@ -1,6 +1,6 @@
 import Airtable, { type Table, type FieldSet } from "airtable"
 import { env } from "$env/dynamic/private"
-import { mapValues } from "lodash"
+import { mapValues } from "lodash-es"
 import type {Asset, Copy, RawCopy, RawAsset, Person, RawPerson, Attendee, Workshop, Leader, RawWorkshop } from "./types"
 import { marked } from "marked"
 import { isURL, isNotNil } from "./utility"

@@ -1,7 +1,7 @@
 import type { Workshop } from "./types"
-import { startCase } from "lodash"
+import { startCase } from "lodash-es"
 import { format } from "date-fns"
-import { set, omit, mapValues, filter } from "lodash"
+import { set, omit, mapValues, filter } from "lodash-es"
 import type { Attendee, NonsensitiveAttendee, Leader, NonsensitiveLeader } from "$lib/types"
 
 export function formatMoney(amount: number) {

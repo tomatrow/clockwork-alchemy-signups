@@ -3,7 +3,7 @@ import { render } from "svelte-email"
 import Confirmation from "$lib/emails/confirmation.svelte"
 import type { SignupFormData } from "$lib/types"
 import { getImageSize } from '$lib/emails/getImageSize'
-import { sortBy, pickBy } from "lodash"
+import { sortBy, pickBy } from "lodash-es"
 import { isNotNil } from "$lib/utility"
 
 export const load = (({ parent, cookies }) => {

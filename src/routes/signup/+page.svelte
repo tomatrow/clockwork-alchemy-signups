@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData, ActionData } from "./$types"
-	import { sortBy } from "lodash"
+	import { sortBy } from "lodash-es"
 	import { getDisplayDate, getWorkshopAvailability } from "$lib/utility"
 	import { enhance } from "$app/forms"
 

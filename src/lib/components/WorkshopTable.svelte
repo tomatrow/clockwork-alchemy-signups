@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { sortBy } from "lodash"
+	import { sortBy } from "lodash-es"
 	import { getWorkshopTitle, getDisplayDate, getWorkshopAvailability } from "$lib/utility"
 	import type { Workshop } from "$lib/types"
 
