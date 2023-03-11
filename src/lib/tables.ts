@@ -1,7 +1,7 @@
 import Airtable, { type Table, type FieldSet } from "airtable"
 import { env } from "$env/dynamic/private"
 import { mapValues } from "lodash"
-import type { Person, RawPerson, Attendee, Workshop, Leader, RawWorkshop } from "./types"
+import type {Asset, Copy, RawCopy, RawAsset, Person, RawPerson, Attendee, Workshop, Leader, RawWorkshop } from "./types"
 import { marked } from "marked"
 import { isURL, isNotNil } from "./utility"
 
@@ -28,6 +28,54 @@ async function getTableData(table: Table<FieldSet>) {
 				id: row.id
 			}
 		])
+	)
+}
+
+export async function getAssets() {
+	const rawAssets = (await getTableData(Tables.Assets)) as Record<string, RawAsset>
+
+	return Object.fromEntries(
+		Object.values(rawAssets)
+			.map(({ id, slug, address }): Asset | undefined => {
+				address = address?.trim() ?? ""
+
+				const guard = slug && address && isURL(address)
+
+				if (!guard) return
+
+				return {
+					id, 
+					slug,
+					address
+				}
+			})
+			.filter(isNotNil)
+			.map((asset) => [asset.slug, asset.address])
+	)
+}
+
+export async function getCopy() {
+	const rawCopys = (await getTableData(Tables.Copy)) as Record<string, RawCopy>
+
+	return Object.fromEntries(
+		Object.values(rawCopys)
+			.map(({ id, slug, value }): Copy | undefined => {
+				value = value?.trim() ?? ""
+
+				const guard = slug && value 
+
+				if (!guard) return
+
+				value = marked(value)
+
+				return {
+					id,
+					slug,
+					value
+				}
+			})
+			.filter(isNotNil)
+			.map((copy) => [copy.slug, copy.value])
 	)
 }
 
@@ -94,6 +142,7 @@ export async function getWorkshops(): Promise<Record<string, Workshop>> {
 					description: rawWorkshop.Description ? marked(rawWorkshop.Description) : undefined,
 					start: rawWorkshop.Start ? new Date(rawWorkshop.Start) : undefined,
 					end: rawWorkshop.End ? new Date(rawWorkshop.End) : undefined,
+					deadline: rawWorkshop.Deadline ? new Date(rawWorkshop.Deadline) : undefined,
 					leaderId: rawWorkshop.Leader?.[0],
 					limit: rawWorkshop.Limit,
 					location: rawWorkshop.Location,

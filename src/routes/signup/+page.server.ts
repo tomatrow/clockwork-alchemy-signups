@@ -1,33 +1,21 @@
-import { getLeaders, getWorkshops, getAttendees } from "$lib/tables"
-import { getNonsensitiveLeader, getNonsensitiveAttendee, getStructuredFormData } from "$lib/utility"
-import { mapValues, pickBy, size } from "lodash"
+import {  getCopy, getWorkshops } from "$lib/tables"
+import {  getStructuredFormData, isNotNil } from "$lib/utility"
+import {  pickBy, size, sortBy } from "lodash"
 import type { PageServerLoad, Actions } from "./$types"
-import { fail } from "@sveltejs/kit"
+import { fail, redirect } from "@sveltejs/kit"
 import { signup } from "$lib/tables"
 import { postmarkClient } from "../../clients"
+import type { SignupFormData } from "$lib/types"
+import { render } from "svelte-email"
+import Confirmation from "$lib/emails/confirmation.svelte"
+import { getImageSize } from "$lib/emails/getImageSize"
 
 export const load = (async () => {
-	return {
-		leaders: getLeaders().then((leaders) => mapValues(leaders, getNonsensitiveLeader)),
-		workshops: getWorkshops(),
-		attendees: getAttendees().then((attendees) => mapValues(attendees, getNonsensitiveAttendee))
-	}
+	return {}
 }) satisfies PageServerLoad
 
-interface SignupFormData {
-	name?: string
-	email?: string
-	workshops?: Record<
-		string,
-		{
-			attending?: "on"
-			option?: string
-		}
-	>
-}
-
 export const actions = {
-	async default({ request }) {
+	async default({ request, cookies }) {
 		const { name = "", email = "", workshops = {} } = getStructuredFormData(await request.formData()) as SignupFormData
 
 		if (!name) return fail(400, { name, missing: true })
@@ -56,11 +44,19 @@ export const actions = {
 
 		if (size(invalidOptionWorkshops)) return fail(400, { workshops: invalidOptionWorkshops, invalidOption: true })
 
+		const closedWorkshops = pickBy(chosenWorkshops, (_, id) => {
+			const workshop = existingWorkshops[id]!
+			const closeDate = workshop.deadline ?? workshop.start
+			return closeDate && closeDate < new Date()
+		})
+
+		if (size(closedWorkshops)) return fail(400, { workshops: closedWorkshops, closed: true })
+
 		const fullWorkshops = pickBy(chosenWorkshops, (_, id) => {
 			const workshop = existingWorkshops[id]!
 			return workshop.limit !== undefined && workshop.attendeeIds.length >= workshop.limit
 		})
-
+		
 		if (size(fullWorkshops)) return fail(400, { workshops: fullWorkshops, full: true })
 
 		await signup({
@@ -69,21 +65,40 @@ export const actions = {
 			workshops: Object.entries(chosenWorkshops).map(([id, { option }]) => ({ id, option }))
 		})
 		
+		const signupFormData: SignupFormData = {
+			name,
+			email,
+			workshops
+		}
+		
+		const copy = await getCopy()
+		
+		const attendingWorkshops = sortBy(pickBy(existingWorkshops, workshop => signupFormData.workshops?.[workshop.id]?.attending), (workshop) => workshop.start?.getTime() ?? Infinity)
+		const images: Record<string, string> = Object.fromEntries(
+			await Promise.all(
+				attendingWorkshops.flatMap(workshop => [workshop.imageURL, ...workshop.options.map(option => option.imageURL)])
+				.filter(isNotNil)
+				.map(async url => [url, await getImageSize(url)])
+			)
+		)
+
 		await postmarkClient.sendEmail({
 			From: "clockwork_confirmation_test@tomatrow.com",
 			To: email,
 			Subject: "Clockwork Alchemy Confirmation Test",
-			TextBody: `
-				Success
-				
-				${JSON.stringify({
-					name,
-					email,
-					workshops: chosenWorkshops
-				})}
-			`
+			HtmlBody: render({
+				template: Confirmation,
+				props: {
+					signup: signupFormData,
+					copy,
+					workshops: existingWorkshops,
+					images
+				}
+			})
 		})
+		
+		cookies.set("signup", JSON.stringify(signupFormData), { path: "/" })
 
-		return { success: true }
+		throw redirect(307, '/signup/confirmation')
 	}
 } satisfies Actions

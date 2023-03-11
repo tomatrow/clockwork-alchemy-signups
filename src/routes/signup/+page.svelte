@@ -10,47 +10,15 @@
 	let attending: Record<string, boolean> = {}
 </script>
 
-{#if form}
-	{#if form.success}
-		Success
-	{:else}
-		Failure:
-
-		{#if form.name}
-			missing name
-		{:else if form.email}
-			{#if form.missing}
-				missing
-			{:else if form.invalid}
-				invalid
-			{/if}
-
-			email
-		{:else if form.workshops}
-			{#if form.missing}
-				missing
-			{:else if form.nonexistant}
-				nonexistant
-			{:else if form.invalidOption}
-				invalidOption
-			{:else if form.full}
-				full
-			{/if}
-
-			workshops
-		{/if}
-	{/if}
-{/if}
-
 <form method="POST" use:enhance>
 	<fieldset>
 		<legend>Info</legend>
-		<label>
+		<label class="name" class:missing={form?.name && form?.missing}>
 			<div>Name</div>
 			<input required type="text" name="name" placeholder="your name" />
 		</label>
-		<label>
-			<div>Email (we'll email you a copy of your reservations)</div>
+		<label class="email" class:missing={form?.email && form?.missing} class:invalid={form?.email && form?.invalid}>
+			<div>Email (We’ll only use this to email you a confirmation of your reservations, nothing else)</div>
 			<input required type="email" name="email" placeholder="your email" />
 		</label>
 	</fieldset>
@@ -60,6 +28,10 @@
 		{@const prefix = `workshops[${id}]`}
 		{@const remaining = getWorkshopAvailability(workshop)}
 		{@const isFull = remaining !== undefined && remaining === 0}
+		{@const invalidOption = form?.workshops?.[id] && form?.invalidOption}
+		{@const closeDate = workshop.deadline ?? workshop.start}
+		{@const isClosed = !!closeDate && (closeDate < new Date())}
+		{@const disabled = isFull || isClosed}
 
 		<fieldset>
 			<legend>
@@ -91,11 +63,17 @@
 				</details>
 			{/if}
 
-			<details>
+			{#if invalidOption}
+				<p class="warning">Please choose a valid option</p>
+			{/if}
+
+			<details open={invalidOption}>
 				<summary> Workshop Summary </summary>
 
-				<div class="description">
-					<img src={imageURL} alt={name} />
+				<div class="description" class:divide={imageURL}>
+					{#if imageURL}
+						<img src={imageURL} alt={name} />
+					{/if}
 					<article>
 						{@html description}
 					</article>
@@ -106,7 +84,7 @@
 						{#each options as { value, imageURL }}
 							<label>
 								<div>
-									<input disabled={isFull} required={!!attending[id]} type="radio" name="{prefix}.option" {value} />
+									<input {disabled} required={!!attending[id]} type="radio" name="{prefix}.option" {value} />
 									<span>{value}</span>
 								</div>
 								{#if imageURL}
@@ -119,12 +97,12 @@
 			</details>
 
 			<label>
-				<input disabled={isFull} type="checkbox" name="{prefix}.attending" bind:checked={attending[id]} />
+				<input {disabled} type="checkbox" name="{prefix}.attending" bind:checked={attending[id]} />
 				<span>Attend</span>
 			</label>
 		</fieldset>
 	{/each}
-
+	
 	<button>Signup</button>
 </form>
 
@@ -132,7 +110,8 @@
 	.description {
 		display: flex;
 		gap: 1rem;
-		& > * {
+
+		&.divide > * {
 			width: 50%;
 		}
 	}
@@ -146,5 +125,10 @@
 				max-width: 25rem;
 			}
 		}
+	}
+
+	.warning {
+		color: red;
+		font: bold;
 	}
 </style>
