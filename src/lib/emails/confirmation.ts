@@ -9,6 +9,6 @@ export function renderConfirmation(props: {
 }) {
 	return render({
 		template: Confirmation,
-		props,
+		props
 	})
 }

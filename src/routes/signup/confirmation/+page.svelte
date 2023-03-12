@@ -8,24 +8,24 @@
 
 <h1>Confirmation</h1>
 
-<section>	
+<section>
 	<h2>Attendee</h2>
 	<p><b>Name:</b> {data.signup.name}</p>
 	<p><b>Email:</b> {data.signup.email}</p>
 </section>
 
-<section>	
+<section>
 	<h2>Workshops</h2>
 
-	{#each sortBy(pickBy(data.workshops, workshop => data.signup.workshops[workshop.id]?.attending), (workshop) => workshop.start?.getTime() ?? Infinity) as workshop}
+	{#each sortBy( pickBy(data.workshops, (workshop) => data.signup.workshops[workshop.id]?.attending), (workshop) => workshop.start?.getTime() ?? Infinity ) as workshop}
 		{@const { imageURL, id, cost, description, end, location, paymentInstructions, options, start, name } = workshop}
-		{@const option = Object.values(options).find(option => option.value === data.signup.workshops[id]?.option)}
+		{@const option = Object.values(options).find((option) => option.value === data.signup.workshops[id]?.option)}
 
 		<fieldset>
 			<legend>
 				<h2>{name ?? ""}</h2>
 			</legend>
-	
+
 			{#if (start && end) || location}
 				<b>
 					{#if start && end}
@@ -37,21 +37,21 @@
 				</b>
 				<br />
 			{/if}
-	
+
 			{#if cost}
 				<b>Cost</b>: {cost}
 			{/if}
-	
+
 			{#if paymentInstructions}
 				<details>
 					<summary>Payment Details</summary>
 					{@html paymentInstructions}
 				</details>
 			{/if}
-	
+
 			<details>
 				<summary> Workshop Summary </summary>
-	
+
 				<div class="description" class:divide={imageURL}>
 					{#if imageURL}
 						<img src={imageURL} alt={name} />
@@ -60,7 +60,7 @@
 						{@html description}
 					</article>
 				</div>
-	
+
 				{#if option}
 					<div class="option">
 						<div>

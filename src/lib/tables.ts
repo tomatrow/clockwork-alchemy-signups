@@ -1,7 +1,18 @@
 import Airtable, { type Table, type FieldSet } from "airtable"
 import { env } from "$env/dynamic/private"
 import { mapValues } from "lodash-es"
-import type {Asset, Copy, RawCopy, RawAsset, Person, RawPerson, Attendee, Workshop, Leader, RawWorkshop } from "./types"
+import type {
+	Asset,
+	Copy,
+	RawCopy,
+	RawAsset,
+	Person,
+	RawPerson,
+	Attendee,
+	Workshop,
+	Leader,
+	RawWorkshop
+} from "./types"
 import { marked } from "marked"
 import { isURL, isNotNil } from "./utility"
 
@@ -44,7 +55,7 @@ export async function getAssets() {
 				if (!guard) return
 
 				return {
-					id, 
+					id,
 					slug,
 					address
 				}
@@ -62,7 +73,7 @@ export async function getCopy() {
 			.map(({ id, slug, value }): Copy | undefined => {
 				value = value?.trim() ?? ""
 
-				const guard = slug && value 
+				const guard = slug && value
 
 				if (!guard) return
 

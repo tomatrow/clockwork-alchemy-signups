@@ -30,7 +30,7 @@
 		{@const isFull = remaining !== undefined && remaining === 0}
 		{@const invalidOption = form?.workshops?.[id] && form?.invalidOption}
 		{@const closeDate = workshop.deadline ?? workshop.start}
-		{@const isClosed = !!closeDate && (closeDate < new Date())}
+		{@const isClosed = !!closeDate && closeDate < new Date()}
 		{@const disabled = isFull || isClosed}
 
 		<fieldset>
@@ -102,7 +102,7 @@
 			</label>
 		</fieldset>
 	{/each}
-	
+
 	<button>Signup</button>
 </form>
 
