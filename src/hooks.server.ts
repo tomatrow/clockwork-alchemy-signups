@@ -5,7 +5,9 @@ import crypto from "crypto"
 setup()
 
 export const handle = (async ({ event, resolve }) => {
+	console.log(`loading: ${event.url}`)
 	const response = await resolve(event)
+	console.log(`loaded: ${event.url}`)
 	return response
 }) satisfies Handle
 
