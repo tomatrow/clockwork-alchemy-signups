@@ -4,6 +4,8 @@ import { mapValues } from "lodash-es"
 import type { LayoutServerLoad } from "./$types"
 
 export const load = (async () => {
+	console.log("loading signup layout data")
+
 	return {
 		copy: getCopy(),
 		assets: getAssets(),

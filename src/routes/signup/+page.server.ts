@@ -11,6 +11,8 @@ import Confirmation from "$lib/emails/confirmation.svelte"
 import { getImageSize } from "$lib/emails/getImageSize"
 
 export const load = (async () => {
+	console.log("Loading signup page data")
+
 	return {}
 }) satisfies PageServerLoad
 
