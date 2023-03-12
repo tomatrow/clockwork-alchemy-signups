@@ -2,10 +2,11 @@ lockfileVersion: 5.4
 
 specifiers:
   '@felte/reporter-svelte': ^1.1.5
-  '@sveltejs/adapter-auto': ^2.0.0
+  '@sveltejs/adapter-netlify': ^2.0.6
   '@sveltejs/kit': ^1.10.0
   '@types/cookie': ^0.5.1
   '@types/lodash': ^4.14.191
+  '@types/lodash-es': ^4.17.6
   '@types/marked': ^4.0.8
   airtable: ^0.11.6
   date-fns: ^2.29.3
@@ -37,10 +38,11 @@ dependencies:
 
 devDependencies:
   '@felte/reporter-svelte': 1.1.5_svelte@3.55.1
-  '@sveltejs/adapter-auto': 2.0.0_@sveltejs+kit@1.10.0
+  '@sveltejs/adapter-netlify': 2.0.6_@sveltejs+kit@1.10.0
   '@sveltejs/kit': 1.10.0_svelte@3.55.1+vite@4.1.4
   '@types/cookie': 0.5.1
   '@types/lodash': 4.14.191
+  '@types/lodash-es': 4.17.6
   '@types/marked': 4.0.8
   airtable: 0.11.6
   prettier: 2.8.4
@@ -275,6 +277,10 @@ packages:
       svelte: 3.55.1
     dev: true
 
+  /@iarna/toml/2.2.5:
+    resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
+    dev: true
+
   /@jridgewell/resolve-uri/3.1.0:
     resolution: {integrity: sha512-F2msla3tad+Mfht5cJq7LSXcdudKTWCVYUgw6pLFOOHSTtZlj6SWNYAp+AhuqLmWdBO2X5hPrLcu8cVP8fy28w==}
     engines: {node: '>=6.0.0'}
@@ -323,13 +329,15 @@ packages:
       selderee: 0.10.0
     dev: false
 
-  /@sveltejs/adapter-auto/2.0.0_@sveltejs+kit@1.10.0:
-    resolution: {integrity: sha512-b+gkHFZgD771kgV3aO4avHFd7y1zhmMYy9i6xOK7m/rwmwaRO8gnF5zBc0Rgca80B2PMU1bKNxyBTHA14OzUAQ==}
+  /@sveltejs/adapter-netlify/2.0.6_@sveltejs+kit@1.10.0:
+    resolution: {integrity: sha512-9guxI9jG/v/JTr/I1E1YGKppKWRyvs60VuhPJcGBrj2MfoBxR40vhxkrWPFcNJoAdyQUSjqxbg7sZLA4WbNfgA==}
     peerDependencies:
-      '@sveltejs/kit': ^1.0.0
+      '@sveltejs/kit': ^1.5.0
     dependencies:
+      '@iarna/toml': 2.2.5
       '@sveltejs/kit': 1.10.0_svelte@3.55.1+vite@4.1.4
-      import-meta-resolve: 2.2.1
+      esbuild: 0.16.17
+      set-cookie-parser: 2.5.1
     dev: true
 
   /@sveltejs/kit/1.10.0_svelte@3.55.1+vite@4.1.4:
@@ -391,6 +399,12 @@ packages:
 
   /@types/cookie/0.5.1:
     resolution: {integrity: sha512-COUnqfB2+ckwXXSFInsFdOAWQzCCx+a5hq2ruyj+Vjund94RJQd4LG2u9hnvJrTgunKAaax7ancBYlDrNYxA0g==}
+    dev: true
+
+  /@types/lodash-es/4.17.6:
+    resolution: {integrity: sha512-R+zTeVUKDdfoRxpAryaQNRKk3105Rrgx2CFRClIgRGaqDTdjsm8h6IYA8ir584W3ePzkZfst5xIgDwYrlh9HLg==}
+    dependencies:
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash/4.14.191:
@@ -940,10 +954,6 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-    dev: true
-
-  /import-meta-resolve/2.2.1:
-    resolution: {integrity: sha512-C6lLL7EJPY44kBvA80gq4uMsVFw5x3oSKfuMl1cuZ2RkI5+UJqQXgn+6hlUew0y4ig7Ypt4CObAAIzU53Nfpuw==}
     dev: true
 
   /inflight/1.0.6:
