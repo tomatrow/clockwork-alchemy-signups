@@ -30,16 +30,22 @@ enum TableNames {
 const Tables = mapValues(TableNames, base)
 
 async function getTableData(table: Table<FieldSet>) {
-	const rows = await table.select({ view: env.AIRTABLE_API_VIEW_NAME }).all()
-	return Object.fromEntries(
-		rows.map((row) => [
-			row.id,
-			{
-				...row.fields,
-				id: row.id
-			}
-		])
-	)
+	try {
+		const rows = await table.select({ view: env.AIRTABLE_API_VIEW_NAME }).all()
+		return Object.fromEntries(
+			rows.map((row) => [
+				row.id,
+				{
+					...row.fields,
+					id: row.id
+				}
+			])
+		)
+	} catch (cause) {
+		throw new Error(`Failed to load table data: ${table.name}`, {
+			cause
+		})
+	}
 }
 
 export async function getAssets() {
