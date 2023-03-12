@@ -1,6 +1,5 @@
-import Airtable, { type Table, type FieldSet } from "airtable"
 import { env } from "$env/dynamic/private"
-import { mapValues } from "lodash-es"
+import { mapValues, bindAll } from "lodash-es"
 import type {
 	Asset,
 	Copy,
@@ -16,8 +15,6 @@ import type {
 import { marked } from "marked"
 import { isURL, isNotNil } from "./utility"
 
-const base = Airtable.base(env.AIRTABLE_BASE_ID)
-
 enum TableNames {
 	"Leaders" = "Leaders",
 	"Workshops" = "Workshops",
@@ -27,11 +24,116 @@ enum TableNames {
 	"Settings" = "Settings"
 }
 
-const Tables = mapValues(TableNames, base)
+type AirtableFieldSet = Record<string, string[] | string | number>
+type AirtableRecord = {
+	id: string
+	createdTime: string
+	fields: AirtableFieldSet
+}
 
-async function getTableData(table: Table<FieldSet>) {
+
+class AirtableClient {
+	fetch: typeof fetch
+	endpointUrl: string
+	apiKey: string
+	baseId: string
+	view: string
+	
+	constructor() {
+		this.fetch = fetch
+		this.endpointUrl = "https://api.airtable.com"
+		this.apiKey = env.AIRTABLE_API_KEY
+		this.baseId = env.AIRTABLE_BASE_ID
+		this.view = env.AIRTABLE_API_VIEW_NAME
+	}
+	
+	table(name: string) {
+		return new AirtableTable(this, name)
+	}
+}
+
+class AirtableTable {
+	client: AirtableClient
+	name: string
+	baseUrl: string
+	baseHeaders: Record<string, string>
+
+	constructor(client: AirtableClient, name: string) {
+		this.client = client
+		this.name = name
+		this.baseUrl = `${this.client.endpointUrl}/v0/${this.client.baseId}/${this.name}`
+		this.baseHeaders = {
+			authorization: `Bearer ${this.client.apiKey}`
+		}
+	}
+	
+	async select(offset?: string) {
+		const params: Record<string, string> = {
+			view: this.client.view,
+			maxRecords: String(100),
+		}
+		if (offset) params.offset = offset
+		const search = new URLSearchParams(params)
+		try {
+			const response = await this.client.fetch(`${this.baseUrl}?${search}`, {
+				headers: this.baseHeaders
+			})
+			const json = await response.json() as {
+				offset?: string
+				records: AirtableRecord[]
+			}
+			return json
+		} catch (cause) {
+			throw new Error(`Failed to select from: ${this.name}`, {
+				cause
+			})
+		}
+	}
+	
+	async selectAll() {
+		let offset: string | undefined
+		const records: AirtableRecord[] = []
+		
+		do {
+			const response = await this.select(offset)
+			records.push(...response.records)
+			offset = response.offset
+		} while (offset)
+	
+		return records
+	}
+
+	async create(fields: AirtableFieldSet) {
+		try {
+			await this.client.fetch(`${this.baseUrl}`, {
+				method: "POST",
+				headers: {
+					...this.baseHeaders,
+					"content-type" : "application/json",
+				},
+				body: JSON.stringify({
+					records: [
+						{
+							fields
+						}
+					]
+				})
+			})
+		} catch (cause) {
+			throw new Error(`Failed to create records for ${this.name}`, {
+				cause
+			})
+		}
+	}
+}
+
+export const Airtable = new AirtableClient()
+
+const Tables = mapValues(TableNames, name => Airtable.table(name))
+
+async function getTableData(table: (typeof Tables)[TableNames]) {
 	try {
-		const rows = await table.select({ view: env.AIRTABLE_API_VIEW_NAME }).all()
+		const rows = await table.selectAll()
 		return Object.fromEntries(
 			rows.map((row) => [
 				row.id,
