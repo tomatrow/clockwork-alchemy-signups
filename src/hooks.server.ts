@@ -12,11 +12,9 @@ export const handle = (async ({ event, resolve }) => {
 export const handleError = (({ error, event }) => {
 	const errorId = crypto.randomUUID()
 
-	console.log(
-		JSON.stringify({
-			errorId,
-			error,
-			event
-		})
-	)
+	console.log({
+		errorId,
+		error,
+		json: JSON.stringify(event, null, 2)
+	})
 }) satisfies HandleServerError
