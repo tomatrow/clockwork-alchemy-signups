@@ -33,7 +33,8 @@
 		{@const remaining = getWorkshopAvailability(workshop)}
 		{@const isFull = remaining !== undefined && remaining === 0}
 		{@const invalidOption = form?.workshops?.[id] && form?.invalidOption}
-		{@const closeDate = workshop.deadline ?? workshop.start}
+		{@const deadline = workshop.deadline}
+		{@const closeDate = deadline ?? workshop.start}
 		{@const isClosed = !!closeDate && closeDate < new Date()}
 		{@const disabled = isFull || isClosed}
 
@@ -43,6 +44,9 @@
 			</legend>
 
 			<div>{remaining ?? "-"} spots remaining</div>
+			{#if deadline}
+				<div><b>Deadline to register:<b/> {getDisplayDate(deadline)}</div>
+			{/if}
 
 			{#if (start && end) || location}
 				<b>
