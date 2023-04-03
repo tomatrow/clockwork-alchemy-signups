@@ -1,4 +1,4 @@
-import { getCopy, getWorkshops } from "$lib/tables"
+import { getCopy, getWorkshops, getSettings } from "$lib/tables"
 import { getStructuredFormData, isNotNil } from "$lib/utility"
 import { pickBy, size, sortBy } from "lodash-es"
 import type { PageServerLoad, Actions } from "./$types"
@@ -74,6 +74,7 @@ export const actions = {
 		}
 
 		const copy = await getCopy()
+		const settings = await getSettings()
 
 		const attendingWorkshops = sortBy(
 			pickBy(existingWorkshops, (workshop) => signupFormData.workshops?.[workshop.id]?.attending),
@@ -89,9 +90,9 @@ export const actions = {
 		)
 
 		await postmarkClient.sendEmail({
-			From: "clockwork_confirmation_test@tomatrow.com",
+			From: "workshops@clockworkalchemy.com",
 			To: email,
-			Subject: "Clockwork Alchemy Confirmation Test",
+			Subject: "Workshop RSVP Confirmation",
 			HtmlBody: render({
 				template: Confirmation,
 				props: {

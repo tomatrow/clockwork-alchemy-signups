@@ -22,6 +22,18 @@ export interface RawCopy {
 	value?: string
 }
 
+export interface RawSetting {
+	id: string
+	slug?: string
+	value?: string
+}
+
+export interface Setting {
+	id: string
+	slug: string
+	value: string
+}
+
 export interface RawPerson {
 	id: string
 	Email?: string

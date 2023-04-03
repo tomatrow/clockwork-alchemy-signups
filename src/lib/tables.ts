@@ -10,6 +10,8 @@ import type {
 	Attendee,
 	Workshop,
 	Leader,
+	Setting,
+	RawSetting,
 	RawWorkshop
 } from "./types"
 import { marked } from "marked"
@@ -178,6 +180,31 @@ export async function getCopy() {
 	return Object.fromEntries(
 		Object.values(rawCopys)
 			.map(({ id, slug, value }): Copy | undefined => {
+				value = value?.trim() ?? ""
+
+				const guard = slug && value
+
+				if (!guard) return
+
+				value = marked(value)
+
+				return {
+					id,
+					slug,
+					value
+				}
+			})
+			.filter(isNotNil)
+			.map((copy) => [copy.slug, copy.value])
+	)
+}
+
+export async function getSettings() {
+	const rawSettings = (await getTableData(Tables.Settings)) as Record<string, RawSetting>
+
+	return Object.fromEntries(
+		Object.values(rawSettings)
+			.map(({ id, slug, value }): Setting | undefined => {
 				value = value?.trim() ?? ""
 
 				const guard = slug && value
