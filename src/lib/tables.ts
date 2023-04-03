@@ -1,5 +1,5 @@
 import { env } from "$env/dynamic/private"
-import { mapValues, bindAll } from "lodash-es"
+import { mapValues } from "lodash-es"
 import type {
 	Asset,
 	Copy,

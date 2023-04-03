@@ -10,7 +10,11 @@
 	let attending: Record<string, boolean> = {}
 </script>
 
-<form method="POST" use:enhance>
+<form method="POST" use:enhance>	
+	{#if data.copy.workshop_signup_page_pre_blurb}
+		{@html data.copy.workshop_signup_page_pre_blurb}
+	{/if}
+
 	<fieldset>
 		<legend>Info</legend>
 		<label class="name" class:missing={form?.name && form?.missing}>
