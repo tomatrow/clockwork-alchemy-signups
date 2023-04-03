@@ -75,7 +75,7 @@
 				<p class="warning">Please choose a valid option</p>
 			{/if}
 
-			<details open={invalidOption}>
+			<details open={invalidOption || !!options.length}>
 				<summary> Workshop Summary </summary>
 
 				<div class="description" class:divide={imageURL}>
