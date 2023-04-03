@@ -100,9 +100,9 @@
 				{/if}
 			</details>
 
-			<label>
+			<label class="attend-label">
 				<input {disabled} type="checkbox" name="{prefix}.attending" bind:checked={attending[id]} />
-				<span>Attend</span>
+				<div>{@html (data.copy.workshop_signup_page_rsvp_button_label ?? "RSVP")}</div>
 			</label>
 		</fieldset>
 	{/each}
@@ -128,6 +128,20 @@
 			img {
 				max-width: 25rem;
 			}
+		}
+	}
+	
+	.attend-label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		
+		input {
+			margin: 0;
+		}
+		
+		:global(p) {
+			margin-bottom: 0;
 		}
 	}
 

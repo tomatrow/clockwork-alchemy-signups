@@ -31,14 +31,13 @@ type AirtableRecord = {
 	fields: AirtableFieldSet
 }
 
-
 class AirtableClient {
 	fetch: typeof fetch
 	endpointUrl: string
 	apiKey: string
 	baseId: string
 	view: string
-	
+
 	constructor() {
 		this.fetch = fetch
 		this.endpointUrl = "https://api.airtable.com"
@@ -46,7 +45,7 @@ class AirtableClient {
 		this.baseId = env.AIRTABLE_BASE_ID
 		this.view = env.AIRTABLE_API_VIEW_NAME
 	}
-	
+
 	table(name: string) {
 		return new AirtableTable(this, name)
 	}
@@ -66,11 +65,11 @@ class AirtableTable {
 			authorization: `Bearer ${this.client.apiKey}`
 		}
 	}
-	
+
 	async select(offset?: string) {
 		const params: Record<string, string> = {
 			view: this.client.view,
-			maxRecords: String(100),
+			maxRecords: String(100)
 		}
 		if (offset) params.offset = offset
 		const search = new URLSearchParams(params)
@@ -78,7 +77,7 @@ class AirtableTable {
 			const response = await this.client.fetch(`${this.baseUrl}?${search}`, {
 				headers: this.baseHeaders
 			})
-			const json = await response.json() as {
+			const json = (await response.json()) as {
 				offset?: string
 				records: AirtableRecord[]
 			}
@@ -89,17 +88,17 @@ class AirtableTable {
 			})
 		}
 	}
-	
+
 	async selectAll() {
 		let offset: string | undefined
 		const records: AirtableRecord[] = []
-		
+
 		do {
 			const response = await this.select(offset)
 			records.push(...response.records)
 			offset = response.offset
 		} while (offset)
-	
+
 		return records
 	}
 
@@ -109,7 +108,7 @@ class AirtableTable {
 				method: "POST",
 				headers: {
 					...this.baseHeaders,
-					"content-type" : "application/json",
+					"content-type": "application/json"
 				},
 				body: JSON.stringify({
 					records: [
@@ -129,7 +128,7 @@ class AirtableTable {
 
 export const Airtable = new AirtableClient()
 
-const Tables = mapValues(TableNames, name => Airtable.table(name))
+const Tables = mapValues(TableNames, (name) => Airtable.table(name))
 
 async function getTableData(table: (typeof Tables)[TableNames]) {
 	try {
