@@ -64,7 +64,7 @@
 				<b>Cost</b>: {cost}
 			{/if}
 
-			{#if paymentInstructions}
+			{#if cost && paymentInstructions}
 				<details>
 					<summary>Payment Details</summary>
 					{@html paymentInstructions}
