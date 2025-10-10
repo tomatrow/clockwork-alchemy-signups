@@ -6,7 +6,7 @@ import { fail, redirect } from "@sveltejs/kit"
 import { signup } from "$lib/tables"
 import { postmarkClient } from "../../clients"
 import type { SignupFormData } from "$lib/types"
-import { render } from "svelte-email"
+import { render } from "svelty-email"
 import Confirmation from "$lib/emails/confirmation.svelte"
 import { getImageSize } from "$lib/emails/getImageSize"
 
@@ -89,19 +89,18 @@ export const actions = {
 			)
 		)
 
+		const { html } = await render(Confirmation, {
+			signup: signupFormData,
+			copy,
+			workshops: existingWorkshops,
+			images
+		})
+
 		await postmarkClient.sendEmail({
 			From: "workshops@clockworkalchemy.com",
 			To: email,
 			Subject: "Workshop RSVP Confirmation",
-			HtmlBody: render({
-				template: Confirmation,
-				props: {
-					signup: signupFormData,
-					copy,
-					workshops: existingWorkshops,
-					images
-				}
-			})
+			HtmlBody: html
 		})
 
 		cookies.set("signup", JSON.stringify(signupFormData), { path: "/" })

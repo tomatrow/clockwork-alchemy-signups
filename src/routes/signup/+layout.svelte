@@ -18,4 +18,4 @@
 	<slot />
 </main>
 
-<footer />
+<footer></footer>

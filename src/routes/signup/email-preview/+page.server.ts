@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types"
-import { render } from "svelte-email"
+import { render } from "svelty-email"
 import Confirmation from "$lib/emails/confirmation.svelte"
 import type { SignupFormData } from "$lib/types"
 import { getImageSize } from "$lib/emails/getImageSize"
@@ -23,14 +23,11 @@ export const load = (({ parent, cookies }) => {
 				)
 			)
 
-			return render({
-				template: Confirmation,
-				props: {
-					workshops,
-					copy,
-					signup,
-					images
-				}
+			return render(Confirmation, {
+				workshops,
+				copy,
+				signup,
+				images
 			})
 		})
 		.catch((error) => {

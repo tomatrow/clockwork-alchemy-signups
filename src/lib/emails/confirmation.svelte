@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Section, Container, Preview, Head, Body, Html, Img } from "svelte-email"
+	import { Section, Container, Preview, Head, Body, Html, Img } from "svelty-email"
 	import type { SignupFormData, Workshop, Size } from "$lib/types"
 	import { sortBy, pickBy } from "lodash-es"
 	import { getDisplayDate } from "$lib/utility"

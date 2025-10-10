@@ -1,11 +1,9 @@
 <script lang="ts">
-	import type { PageData, ActionData } from "./$types"
 	import { sortBy } from "lodash-es"
 	import { getDisplayDate, getWorkshopAvailability } from "$lib/utility"
 	import { enhance } from "$app/forms"
 
-	export let data: PageData
-	export let form: ActionData
+	let { data, form } = $props()
 
 	let attending: Record<string, boolean> = {}
 </script>
@@ -45,7 +43,7 @@
 
 			<div>{remaining ?? "-"} spots remaining</div>
 			{#if deadline}
-				<div><b>Deadline to register:<b /> {getDisplayDate(deadline)}</b></div>
+				<div><b>Deadline to register: {getDisplayDate(deadline)}</b></div>
 			{/if}
 
 			{#if (start && end) || location}

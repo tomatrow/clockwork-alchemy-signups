@@ -1,6 +1,6 @@
 import type { Workshop } from "./types"
 import { startCase } from "lodash-es"
-import { format, utcToZonedTime } from "date-fns-tz"
+import { formatInTimeZone } from "date-fns-tz"
 import { set, omit, mapValues, filter } from "lodash-es"
 import type { Attendee, NonsensitiveAttendee, Leader, NonsensitiveLeader } from "$lib/types"
 
@@ -20,7 +20,7 @@ export function getWorkshopTitle<T extends Pick<Workshop, "slug" | "name">>(work
 }
 
 export function getDisplayDate(date?: Date) {
-	return date ? format(utcToZonedTime(date, 'America/Los_Angeles'), "E h:mm a") : "-"
+	return date ? formatInTimeZone(date, "America/Los_Angeles", "E h:mm a") : "-"
 }
 
 export function getAttendanceByWorkshopId({

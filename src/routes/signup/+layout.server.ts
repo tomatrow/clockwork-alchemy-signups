@@ -6,15 +6,15 @@ import { getNonsensitiveLeader, getNonsensitiveAttendee } from "$lib/utility"
 import type { LayoutServerLoad } from "./$types"
 
 export const load = (async () => {
-	if (!dev) throw error(418, "Temporarily disabled")
+	if (!dev) error(418, "Temporarily disabled")
 
 	console.log("loading signup layout data")
 
 	return {
-		copy: getCopy(),
-		assets: getAssets(),
-		leaders: getLeaders().then((leaders) => mapValues(leaders, getNonsensitiveLeader)),
-		workshops: getWorkshops(),
-		attendees: getAttendees().then((attendees) => mapValues(attendees, getNonsensitiveAttendee))
+		copy: await getCopy(),
+		assets: await getAssets(),
+		leaders: await getLeaders().then((leaders) => mapValues(leaders, getNonsensitiveLeader)),
+		workshops: await getWorkshops(),
+		attendees: await getAttendees().then((attendees) => mapValues(attendees, getNonsensitiveAttendee))
 	}
 }) satisfies LayoutServerLoad
