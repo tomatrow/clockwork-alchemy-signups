@@ -36,9 +36,21 @@
 					<h2>Workshops</h2>
 
 					{#each attendingWorkshops as workshop}
-						{@const { imageURL, id, cost, description, end, location, paymentInstructions, options, start, name } =
-							workshop}
-						{@const option = Object.values(options).find((option) => option.value === signup.workshops?.[id]?.option)}
+						{@const {
+							imageURL,
+							id,
+							cost,
+							description,
+							end,
+							location,
+							paymentInstructions,
+							options,
+							start,
+							name
+						} = workshop}
+						{@const option = Object.values(options).find(
+							(option) => option.value === signup.workshops?.[id]?.option
+						)}
 
 						<fieldset>
 							<legend>
@@ -90,7 +102,12 @@
 										</div>
 										{#if option.imageURL}
 											{@const { width, height } = images[option.imageURL]}
-											<Img src={option.imageURL} width={300} height={300 * (+height / +width)} alt={option.value} />
+											<Img
+												src={option.imageURL}
+												width={300}
+												height={300 * (+height / +width)}
+												alt={option.value}
+											/>
 										{/if}
 									</div>
 								{/if}

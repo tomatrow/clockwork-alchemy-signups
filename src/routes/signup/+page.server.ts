@@ -18,13 +18,18 @@ export const load = (async () => {
 
 export const actions = {
 	async default({ request, cookies }) {
-		const { name = "", email = "", workshops = {} } = getStructuredFormData(await request.formData()) as SignupFormData
+		const {
+			name = "",
+			email = "",
+			workshops = {}
+		} = getStructuredFormData(await request.formData()) as SignupFormData
 
 		if (!name) return fail(400, { name, missing: true })
 
 		if (!email) return fail(400, { email, missing: true })
 
-		if (!/^[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/.test(email)) return fail(400, { email, invalid: true })
+		if (!/^[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/.test(email))
+			return fail(400, { email, invalid: true })
 
 		const chosenWorkshops = pickBy(workshops ?? {}, (workshop) => workshop.attending === "on")
 
@@ -34,17 +39,19 @@ export const actions = {
 
 		const nonexistantWorkshops = pickBy(chosenWorkshops, (_, id) => !existingWorkshops[id])
 
-		if (size(nonexistantWorkshops)) return fail(400, { workshops: nonexistantWorkshops, nonexistant: true })
+		if (size(nonexistantWorkshops))
+			return fail(400, { workshops: nonexistantWorkshops, nonexistant: true })
 
 		const invalidOptionWorkshops = pickBy(chosenWorkshops, ({ option }, id) => {
 			const optionPool = existingWorkshops[id]?.options
 
-			return optionPool?.length
-				? !optionPool.some((existingOption) => existingOption.value === option)
-				: option !== undefined
+			return optionPool?.length ?
+					!optionPool.some((existingOption) => existingOption.value === option)
+				:	option !== undefined
 		})
 
-		if (size(invalidOptionWorkshops)) return fail(400, { workshops: invalidOptionWorkshops, invalidOption: true })
+		if (size(invalidOptionWorkshops))
+			return fail(400, { workshops: invalidOptionWorkshops, invalidOption: true })
 
 		const closedWorkshops = pickBy(chosenWorkshops, (_, id) => {
 			const workshop = existingWorkshops[id]!
@@ -83,7 +90,10 @@ export const actions = {
 		const images: Record<string, string> = Object.fromEntries(
 			await Promise.all(
 				attendingWorkshops
-					.flatMap((workshop) => [workshop.imageURL, ...workshop.options.map((option) => option.imageURL)])
+					.flatMap((workshop) => [
+						workshop.imageURL,
+						...workshop.options.map((option) => option.imageURL)
+					])
 					.filter(isNotNil)
 					.map(async (url) => [url, await getImageSize(url)])
 			)

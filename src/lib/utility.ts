@@ -30,7 +30,10 @@ export function getAttendanceByWorkshopId({
 	workshops: Record<string, Workshop>
 	attendees: Record<string, Attendee>
 }): Record<string, number> {
-	return mapValues(workshops, ({ id }) => filter(attendees, (attendee) => attendee.workshopIds.includes(id)).length)
+	return mapValues(
+		workshops,
+		({ id }) => filter(attendees, (attendee) => attendee.workshopIds.includes(id)).length
+	)
 }
 
 export function getWorkshopAvailability(workshop: Workshop) {

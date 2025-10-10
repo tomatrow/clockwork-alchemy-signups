@@ -15,6 +15,8 @@ export const load = (async () => {
 		assets: await getAssets(),
 		leaders: await getLeaders().then((leaders) => mapValues(leaders, getNonsensitiveLeader)),
 		workshops: await getWorkshops(),
-		attendees: await getAttendees().then((attendees) => mapValues(attendees, getNonsensitiveAttendee))
+		attendees: await getAttendees().then((attendees) =>
+			mapValues(attendees, getNonsensitiveAttendee)
+		)
 	}
 }) satisfies LayoutServerLoad

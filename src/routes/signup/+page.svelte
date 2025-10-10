@@ -19,14 +19,31 @@
 			<div>Name</div>
 			<input required type="text" name="name" placeholder="your name" />
 		</label>
-		<label class="email" class:missing={form?.email && form?.missing} class:invalid={form?.email && form?.invalid}>
-			<div>Email (We’ll only use this to email you a confirmation of your reservations, nothing else)</div>
+		<label
+			class="email"
+			class:missing={form?.email && form?.missing}
+			class:invalid={form?.email && form?.invalid}
+		>
+			<div>
+				Email (We’ll only use this to email you a confirmation of your reservations, nothing else)
+			</div>
 			<input required type="email" name="email" placeholder="your email" />
 		</label>
 	</fieldset>
 
 	{#each sortBy(data.workshops, (workshop) => workshop.start?.getTime() ?? Infinity) as workshop}
-		{@const { imageURL, id, cost, description, end, location, paymentInstructions, options, start, name } = workshop}
+		{@const {
+			imageURL,
+			id,
+			cost,
+			description,
+			end,
+			location,
+			paymentInstructions,
+			options,
+			start,
+			name
+		} = workshop}
 		{@const prefix = `workshops[${id}]`}
 		{@const remaining = getWorkshopAvailability(workshop)}
 		{@const isFull = remaining !== undefined && remaining === 0}
@@ -90,7 +107,13 @@
 						{#each options as { value, imageURL }}
 							<label>
 								<div>
-									<input {disabled} required={!!attending[id]} type="radio" name="{prefix}.option" {value} />
+									<input
+										{disabled}
+										required={!!attending[id]}
+										type="radio"
+										name="{prefix}.option"
+										{value}
+									/>
 									<span>{value}</span>
 								</div>
 								{#if imageURL}

@@ -17,7 +17,10 @@ export const load = (({ parent, cookies }) => {
 			const images: Record<string, string> = Object.fromEntries(
 				await Promise.all(
 					attendingWorkshops
-						.flatMap((workshop) => [workshop.imageURL, ...workshop.options.map((option) => option.imageURL)])
+						.flatMap((workshop) => [
+							workshop.imageURL,
+							...workshop.options.map((option) => option.imageURL)
+						])
 						.filter(isNotNil)
 						.map(async (url) => [url, await getImageSize(url)])
 				)

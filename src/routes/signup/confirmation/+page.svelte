@@ -18,8 +18,21 @@
 	<h2>Workshops</h2>
 
 	{#each sortBy( pickBy(data.workshops, (workshop) => data.signup.workshops[workshop.id]?.attending), (workshop) => workshop.start?.getTime() ?? Infinity ) as workshop}
-		{@const { imageURL, id, cost, description, end, location, paymentInstructions, options, start, name } = workshop}
-		{@const option = Object.values(options).find((option) => option.value === data.signup.workshops[id]?.option)}
+		{@const {
+			imageURL,
+			id,
+			cost,
+			description,
+			end,
+			location,
+			paymentInstructions,
+			options,
+			start,
+			name
+		} = workshop}
+		{@const option = Object.values(options).find(
+			(option) => option.value === data.signup.workshops[id]?.option
+		)}
 
 		<fieldset>
 			<legend>
