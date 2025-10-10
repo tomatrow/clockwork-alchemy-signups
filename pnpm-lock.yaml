@@ -42,18 +42,12 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.1
         version: 6.2.1(svelte@5.39.11)(vite@7.1.9(sass@1.93.2))
-      '@types/cookie':
-        specifier: 1.0.0
-        version: 1.0.0
       '@types/lodash':
         specifier: 4.17.20
         version: 4.17.20
       '@types/lodash-es':
         specifier: 4.17.12
         version: 4.17.12
-      '@types/marked':
-        specifier: 6.0.0
-        version: 6.0.0
       prettier:
         specifier: 3.6.2
         version: 3.6.2
@@ -551,10 +545,6 @@ packages:
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
-  '@types/cookie@1.0.0':
-    resolution: {integrity: sha512-mGFXbkDQJ6kAXByHS7QAggRXgols0mAdP4MuXgloGY1tXokvzaFFM4SMqWvf7AH0oafI7zlFJwoGWzmhDqTZ9w==}
-    deprecated: This is a stub types definition. cookie provides its own type definitions, so you do not need this installed.
-
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
@@ -566,10 +556,6 @@ packages:
 
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
-
-  '@types/marked@6.0.0':
-    resolution: {integrity: sha512-jmjpa4BwUsmhxcfsgUit/7A9KbrC48Q0q8KvnY107ogcjGgTFDlIL3RpihNpx2Mu1hM4mdFQjoVc4O6JoGKHsA==}
-    deprecated: This is a stub types definition. marked provides its own type definitions, so you do not need this installed.
 
   '@vitest/expect@3.2.4':
     resolution: {integrity: sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig==}
@@ -711,10 +697,6 @@ packages:
   cookie@0.6.0:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
-
-  cookie@1.0.2:
-    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
-    engines: {node: '>=18'}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1808,10 +1790,6 @@ snapshots:
 
   '@types/cookie@0.6.0': {}
 
-  '@types/cookie@1.0.0':
-    dependencies:
-      cookie: 1.0.2
-
   '@types/deep-eql@4.0.2': {}
 
   '@types/estree@1.0.8': {}
@@ -1821,10 +1799,6 @@ snapshots:
       '@types/lodash': 4.17.20
 
   '@types/lodash@4.17.20': {}
-
-  '@types/marked@6.0.0':
-    dependencies:
-      marked: 16.4.0
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -1975,8 +1949,6 @@ snapshots:
       proto-list: 1.2.4
 
   cookie@0.6.0: {}
-
-  cookie@1.0.2: {}
 
   cross-spawn@7.0.6:
     dependencies:
