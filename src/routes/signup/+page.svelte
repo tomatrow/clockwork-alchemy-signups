@@ -10,7 +10,7 @@
 	let attending: Record<string, boolean> = {}
 </script>
 
-<form method="POST" use:enhance>	
+<form method="POST" use:enhance>
 	{#if data.copy.workshop_signup_page_pre_blurb}
 		{@html data.copy.workshop_signup_page_pre_blurb}
 	{/if}
@@ -45,7 +45,7 @@
 
 			<div>{remaining ?? "-"} spots remaining</div>
 			{#if deadline}
-				<div><b>Deadline to register:<b/> {getDisplayDate(deadline)}</div>
+				<div><b>Deadline to register:<b /> {getDisplayDate(deadline)}</b></div>
 			{/if}
 
 			{#if (start && end) || location}
@@ -106,7 +106,7 @@
 
 			<label class="attend-label">
 				<input {disabled} type="checkbox" name="{prefix}.attending" bind:checked={attending[id]} />
-				<div>{@html (data.copy.workshop_signup_page_rsvp_button_label ?? "RSVP")}</div>
+				<div>{@html data.copy.workshop_signup_page_rsvp_button_label ?? "RSVP"}</div>
 			</label>
 		</fieldset>
 	{/each}
@@ -134,16 +134,16 @@
 			}
 		}
 	}
-	
+
 	.attend-label {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		
+
 		input {
 			margin: 0;
 		}
-		
+
 		:global(p) {
 			margin-bottom: 0;
 		}
