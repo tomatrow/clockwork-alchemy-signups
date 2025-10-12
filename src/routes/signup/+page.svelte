@@ -138,10 +138,19 @@
 <style lang="scss">
 	.description {
 		display: flex;
+		flex-direction: column;
 		gap: 1rem;
 
-		&.divide > * {
-			width: 50%;
+		img {
+			object-fit: contain;
+		}
+
+		@media (min-width: 700px) {
+			flex-direction: row;
+
+			&.divide > * {
+				width: 50%;
+			}
 		}
 	}
 
