@@ -33,6 +33,7 @@
 		"prettier": "3.6.2",
 		"prettier-plugin-svelte": "3.4.0",
 		"sass": "1.93.2",
+		"supports-color": "^10.2.2",
 		"svelte": "5.39.11",
 		"svelte-check": "4.3.3",
 		"svelte-language-server": "^0.17.21",
