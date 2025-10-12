@@ -176,52 +176,40 @@ export async function getAssets() {
 
 export async function getCopy() {
 	const rawCopys = (await getTableData(Tables.Copy)) as Record<string, RawCopy>
+	const copys = await Promise.all(
+		Object.values(rawCopys).map(async ({ id, slug, value }): Promise<Copy | undefined> => {
+			value = value?.trim() ?? ""
 
-	return Object.fromEntries(
-		Object.values(rawCopys)
-			.map(({ id, slug, value }): Copy | undefined => {
-				value = value?.trim() ?? ""
+			const guard = slug && value
 
-				const guard = slug && value
+			if (!guard) return
 
-				if (!guard) return
+			value = await marked(value)
 
-				value = marked(value)
-
-				return {
-					id,
-					slug,
-					value
-				}
-			})
-			.filter(isNotNil)
-			.map((copy) => [copy.slug, copy.value])
+			return { id, slug, value }
+		})
 	)
+
+	return Object.fromEntries(copys.filter(isNotNil).map((copy) => [copy.slug, copy.value]))
 }
 
 export async function getSettings() {
 	const rawSettings = (await getTableData(Tables.Settings)) as Record<string, RawSetting>
+	const settings = await Promise.all(
+		Object.values(rawSettings).map(async ({ id, slug, value }): Promise<Setting | undefined> => {
+			value = value?.trim() ?? ""
 
-	return Object.fromEntries(
-		Object.values(rawSettings)
-			.map(({ id, slug, value }): Setting | undefined => {
-				value = value?.trim() ?? ""
+			const guard = slug && value
 
-				const guard = slug && value
+			if (!guard) return
 
-				if (!guard) return
+			value = await marked(value)
 
-				value = marked(value)
-
-				return {
-					id,
-					slug,
-					value
-				}
-			})
-			.filter(isNotNil)
-			.map((copy) => [copy.slug, copy.value])
+			return { id, slug, value }
+		})
 	)
+
+	return Object.fromEntries(settings.filter(isNotNil).map((copy) => [copy.slug, copy.value]))
 }
 
 async function getPeople(tableName: TableNames) {
@@ -273,30 +261,29 @@ function parseOptions(rawOptions?: string) {
 
 export async function getWorkshops(): Promise<Record<string, Workshop>> {
 	const rawWorkshops = (await getTableData(Tables.Workshops)) as Record<string, RawWorkshop>
-
-	return Object.fromEntries(
-		Object.values(rawWorkshops)
-			.map((rawWorkshop): Workshop => {
-				return {
-					id: rawWorkshop.id,
-					slug: rawWorkshop.slug,
-					name: rawWorkshop.Name,
-					imageURL: rawWorkshop.Image,
-					cost: rawWorkshop.Cost,
-					attendeeIds: rawWorkshop.Attendees ?? [],
-					description: rawWorkshop.Description ? marked(rawWorkshop.Description) : undefined,
-					start: rawWorkshop.Start ? new Date(rawWorkshop.Start) : undefined,
-					end: rawWorkshop.End ? new Date(rawWorkshop.End) : undefined,
-					deadline: rawWorkshop.Deadline ? new Date(rawWorkshop.Deadline) : undefined,
-					leaderId: rawWorkshop.Leader?.[0],
-					limit: rawWorkshop.Limit,
-					location: rawWorkshop.Location,
-					options: parseOptions(rawWorkshop.Options),
-					paymentInstructions: rawWorkshop["Payment Instructions"]
-				}
-			})
-			.map((workshop) => [workshop.id, workshop])
+	const workshops = await Promise.all(
+		Object.values(rawWorkshops).map(async (rawWorkshop): Promise<Workshop> => {
+			return {
+				id: rawWorkshop.id,
+				slug: rawWorkshop.slug,
+				name: rawWorkshop.Name,
+				imageURL: rawWorkshop.Image,
+				cost: rawWorkshop.Cost,
+				attendeeIds: rawWorkshop.Attendees ?? [],
+				description: rawWorkshop.Description ? await marked(rawWorkshop.Description) : undefined,
+				start: rawWorkshop.Start ? new Date(rawWorkshop.Start) : undefined,
+				end: rawWorkshop.End ? new Date(rawWorkshop.End) : undefined,
+				deadline: rawWorkshop.Deadline ? new Date(rawWorkshop.Deadline) : undefined,
+				leaderId: rawWorkshop.Leader?.[0],
+				limit: rawWorkshop.Limit,
+				location: rawWorkshop.Location,
+				options: parseOptions(rawWorkshop.Options),
+				paymentInstructions: rawWorkshop["Payment Instructions"]
+			}
+		})
 	)
+
+	return Object.fromEntries(workshops.map((workshop) => [workshop.id, workshop]))
 }
 
 export async function signup({
