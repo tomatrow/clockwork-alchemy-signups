@@ -7,7 +7,7 @@
 - email service
   - postmark (http://postmarkapp.com)
 - host
-  - netlify (http://netlify.com/)
+  - vercel (http://vercel.com/)
 
 ## dev stack
 
