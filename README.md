@@ -20,3 +20,11 @@
   - sakura (https://oxal.org/projects/sakura)
 - email content
   - svelte-email (https://github.com/carstenlebek/svelte-email)
+
+## routes
+
+- `/signup`
+  - info on workshops
+  - one click button to signup for workships
+- `/signup/confirmation`
+  - page users are redirected to after a
