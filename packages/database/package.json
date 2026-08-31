@@ -7,9 +7,9 @@
 		"build:hooks": "tsdown",
 		"dev:hooks": "tsdown --watch",
 		"migrate": "pocketbase migrate up --dir=./pb_data --migrationsDir=./pb_migrations",
-		"reset": "trash pb_data",
-		"reset:hard": "trash pb_data pb_hooks",
-		"start": "pnpm run reset; pnpm run migrate; pnpm run build:hooks; pnpm run serve",
+		"reset": "./scripts/reset.fish",
+		"reset:hard": "./scripts/reset.fish && rm -rf pb_hooks",
+		"start": "pnpm run reset && pnpm run migrate && pnpm run build:hooks && pnpm run serve",
 		"deploy": "./scripts/deploy.fish"
 	},
 	"devDependencies": {

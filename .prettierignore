@@ -10,6 +10,9 @@ packages/database/pb_data/
 packages/database/pb_data-prod-backup/
 packages/database/pb_hooks/
 
+# Tooling config, not ours to reformat
+.pi/
+
 # Miscellaneous
 static/
 .svelte-kit/

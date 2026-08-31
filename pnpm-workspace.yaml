@@ -1,7 +1,9 @@
 packages:
-  - apps/*
   - packages/*
 allowBuilds:
   "@parcel/watcher": true
+  # pocketbase-typegen's sqlite path (reading data.db directly). We use its
+  # --env/API path instead, but the native module still has to build to import.
+  better-sqlite3: true
   esbuild: true
   svelte-preprocess: false

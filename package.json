@@ -3,9 +3,12 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "pnpm --filter @tomatrow/clockwork-alchemy-signups dev",
+		"start": "./packages/scripts/scripts/start.fish",
+		"dev": "pnpm --filter www dev",
+		"dev:old": "pnpm --filter @tomatrow/clockwork-alchemy-signups dev",
 		"db": "pnpm --filter database start",
 		"db:deploy": "pnpm --filter database deploy",
+		"kill-pb": "pnpm --filter scripts kill-pb",
 		"build": "pnpm -r build",
 		"check": "pnpm -r check",
 		"test:unit": "pnpm -r test:unit",

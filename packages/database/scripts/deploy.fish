@@ -16,6 +16,11 @@
 #   - This is DESTRUCTIVE to your LOCAL packages/database/pb_data too: it resets
 #     and re-migrates with prod values baked in. Re-run `pnpm start` afterwards
 #     to get a dev database back.
+#   - It is ALSO destructive to PROD RECORDS: pushing a fresh data.db wipes every
+#     signup. There is no S3 and no backup cron, so the pull into
+#     pb_data-prod-backup/ below is the only copy — and the NEXT deploy
+#     overwrites it. Safe only while prod is empty; see the durability caveat in
+#     the README before that stops being true.
 #   - Remote logs in as a non-root user; rsync runs as root on the far side via
 #     --rsync-path="sudo rsync" (passwordless sudo, standard Coolify setup) so it
 #     can reach the root-owned /var/lib/docker/volumes paths.
@@ -23,7 +28,9 @@
 set -l pkg_root (cd (dirname (status filename))/..; pwd)
 
 # --- env -----------------------------------------------------------------
-# .env.local first (shared secrets), then .env.production.local (prod overrides).
+# .env.local first (stage-independent), then .env.production.local (prod values).
+# .env.development.local is deliberately never read here — that file holds the
+# dev PB_ADMIN_*, and the init migration bakes whatever is in scope into data.db.
 for file in $pkg_root/.env.local $pkg_root/.env.production.local
 	if test -f $file
 		for line in (grep -v '^\s*#' $file | grep '=')
@@ -49,6 +56,22 @@ end
 if string match -q '*localhost*' -- $PB_APP_URL
 	echo ">> aborted: PB_APP_URL points at localhost ($PB_APP_URL) — that would bake"
 	echo ">>   the dev origin into prod settings + emails."
+	exit 1
+end
+
+# The init migration seeds the superuser from these, so an unset pair ships a
+# prod database nobody can log into (only the one-time installer link, which is
+# easy to miss and then gone). Hard requirement rather than a warning.
+#
+# Note they are NOT sourced from .env.local above: PB_ADMIN_* belong to
+# .env.production.local, which is how the dev password is kept out of prod
+# without needing a comparison guard here.
+if test -z "$PB_ADMIN_USERNAME" -o -z "$PB_ADMIN_PASSWORD"
+	echo ">> aborted: PB_ADMIN_USERNAME/PB_ADMIN_PASSWORD unset — the migration would"
+	echo ">>   bake a prod database with no superuser."
+	echo ">>   Set them in packages/database/.env.production.local (see .env.example),"
+	echo ">>   distinct from the dev pair, and mirror them into"
+	echo ">>   packages/scripts/.env.production.local if you typegen against prod."
 	exit 1
 end
 

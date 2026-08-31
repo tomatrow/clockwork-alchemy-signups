@@ -19,7 +19,13 @@ migrate(
 
 		const settings = app.settings()
 		settings.meta.appName = "Clockwork Alchemy Signups"
-		settings.meta.appURL = appUrl
+		// Guarded: PocketBase VALIDATES meta.appURL (`cannot be blank`), so an
+		// unset PB_APP_URL would fail the whole migration and leave a fresh clone
+		// with no database at all. Leaving the default (http://localhost:8090) is
+		// wrong-but-harmless in dev; deploy.fish refuses to ship without a real
+		// prod origin, which is where it actually matters (it resolves {APP_URL}
+		// in auth emails).
+		if (appUrl) settings.meta.appURL = appUrl
 
 		// TODO: sender identity once the Postmark domain is confirmed.
 		// settings.meta.senderName = "Clockwork Alchemy"
@@ -33,17 +39,70 @@ migrate(
 		// settings.smtp.username = $os.getenv("SMTP_USERNAME")
 		// settings.smtp.password = $os.getenv("SMTP_PASSWORD")
 
-		// TODO: enable the batch API if the client ever needs transactional
-		// multi-record writes (signing up for N workshops at once).
-		// settings.batch.enabled = true
-		// settings.batch.maxRequests = 50
-		// settings.batch.timeout = 3
+		// ----------------------------------------------------------------
+		// batch API — REQUIRED, not an optimization
+		// ----------------------------------------------------------------
+		// runic-pocketbase-collection funnels every optimistic create/update/delete
+		// into a single transactional POST /api/batch. PocketBase ships with that
+		// endpoint DISABLED, so without this a fresh database fails EVERY mutation
+		// — and it fails at the endpoint, so it reads as a client bug. Set the
+		// limits explicitly (they match PocketBase's own defaults) so the config is
+		// self-documenting regardless of prior settings state.
+		settings.batch.enabled = true
+		settings.batch.maxRequests = 50
+		settings.batch.timeout = 3
 
-		// TODO: S3-backed files + backups in prod (Coolify volume is disposable).
+		// No S3, by decision: files and backups stay on the local PocketBase
+		// volume. See the durability note in the README — this is the one thing
+		// that makes the "prod is disposable" deploy model load-bearing rather
+		// than merely convenient.
+		// TODO: decide the backup story before real signups land, e.g.
 		// settings.backups.cron = "0 0 * * *"
 		// settings.backups.cronMaxKeep = 14
 
 		app.save(settings)
+
+		// ----------------------------------------------------------------
+		// superuser (admin UI + pocketbase-typegen login)
+		// ----------------------------------------------------------------
+		// Seeded HERE rather than by a `pocketbase superuser upsert` script, so the
+		// admin account is part of the database's definition like everything else:
+		// one command (`migrate up`) produces a database you can actually log into.
+		//
+		// The same pair authenticates pocketbase-typegen (it reads the schema over
+		// the API as a superuser), which is why packages/scripts' env file repeats
+		// these values for the same stage. They must match.
+		//
+		// STAGE-SCOPED ON PURPOSE: PB_ADMIN_* live in .env.development.local /
+		// .env.production.local, never in the shared .env.local. start.fish sources
+		// the former and deploy.fish the latter, so the dev password is structurally
+		// incapable of being baked into prod's data.db — no guard required.
+		const adminEmail = $os.getenv("PB_ADMIN_USERNAME")
+		const adminPassword = $os.getenv("PB_ADMIN_PASSWORD")
+
+		// Unset is non-fatal: a fresh clone with no env files must still produce a
+		// working database. PocketBase then prints its one-time installer link on
+		// serve, which is the pre-existing behaviour.
+		if (adminEmail && adminPassword) {
+			// Checked before save because PocketBase's own failure here is a validation
+			// dump in the middle of `migrate up`, which reads as a broken migration
+			// rather than a 3-character-too-short password.
+			if (adminPassword.length < 10)
+				throw new Error("PB_ADMIN_PASSWORD must be at least 10 characters")
+
+			const superuser = new Record(app.findCollectionByNameOrId("_superusers"))
+			superuser.set("email", adminEmail)
+			// setPassword, not set("password"): it hashes and sets tokenKey. Assigning
+			// the field directly stores the plaintext and the login silently fails.
+			superuser.setPassword(adminPassword)
+			app.save(superuser)
+		} else {
+			console.log(
+				">> PB_ADMIN_USERNAME/PB_ADMIN_PASSWORD unset: no superuser seeded." +
+					" PocketBase will print an installer link on serve." +
+					" See packages/database/.env.example."
+			)
+		}
 
 		// ----------------------------------------------------------------
 		// collections
@@ -86,6 +145,21 @@ migrate(
 		// Down: drop what the up created. Rarely used — `pnpm reset` is the
 		// normal way back to zero — but PocketBase wants it and it keeps
 		// `migrate down 1` honest.
+		// The seeded superuser usually SURVIVES this: PocketBase refuses to delete
+		// the only existing superuser ("You can't delete the only existing
+		// superuser"), which is exactly the situation after a fresh up. Attempted
+		// anyway for the case where another admin exists, and non-fatal otherwise —
+		// `pnpm reset` is the real way back to zero, and re-running `migrate up`
+		// against a database that kept the record fails on the unique email.
+		const adminEmail = $os.getenv("PB_ADMIN_USERNAME")
+		if (adminEmail) {
+			try {
+				app.delete(app.findAuthRecordByEmail("_superusers", adminEmail))
+			} catch (err) {
+				console.log(`>> could not delete superuser ${adminEmail}: ${err}`)
+			}
+		}
+
 		try {
 			app.delete(app.findCollectionByNameOrId("_scaffold"))
 		} catch {
