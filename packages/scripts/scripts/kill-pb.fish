@@ -1,9 +1,6 @@
 #!/usr/bin/env fish
 
-# Kill whatever is listening on PocketBase's default address (127.0.0.1:8090).
-# Targets the port (not the process name) so a stale `pocketbase serve` — or
-# anything else squatting on the port — gets cleared. `-sTCP:LISTEN` restricts
-# to the listening server, so connected clients (vite, a browser) are left alone.
+# Kills whatever is listening (not just connected) on PocketBase's port.
 
 set -l port 8090
 set -l pids (lsof -ti tcp:$port -sTCP:LISTEN)

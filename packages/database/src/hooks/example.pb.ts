@@ -1,14 +1,8 @@
 /// <reference path="../../pb_data/types.d.ts" />
 
-// STUB hook — proves the tsdown -> pb_hooks -> PocketBase pipeline works.
-// Safe to delete once there is a real hook.
-//
-// Two rules that bite every time (see README):
-//   1. The `.pb` in the filename is load-bearing: PocketBase only auto-loads
-//      `pb_hooks/*.pb.js`. A bare `foo.ts` compiles to a plain CJS module you
-//      must `require(`${__hooks}/foo.js`)` from inside a handler.
-//   2. Handler bodies are re-evaluated standalone, so they CANNOT reference
-//      module-scope bindings — inline the logic or require() inside the body.
+// STUB hook; safe to delete once there is a real hook.
+// Files must be named `*.pb.ts` for PocketBase to auto-load the compiled output.
+// Handler bodies are re-evaluated standalone and cannot reference module-scope bindings.
 
 onRecordsListRequest((e) => {
 	$app.logger().debug("list request", "collection", e.collection?.name)

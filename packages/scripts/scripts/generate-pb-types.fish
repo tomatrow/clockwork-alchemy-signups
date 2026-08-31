@@ -1,25 +1,17 @@
 #!/usr/bin/env fish
 
-# Generate TypeScript types for the PocketBase collections into packages/www.
+# Generates TypeScript types for the PocketBase collections into packages/www.
 #
-# STUB: packages/database has no real collections yet, so this would emit types
-# for `_scaffold` and nothing else. It aborts unless PB_TYPEGEN_FORCE=1 so the
-# no-op output can't get committed and go stale.
+# STUB: no real collections exist yet, so this aborts unless PB_TYPEGEN_FORCE=1.
 #
-# Requires a RUNNING PocketBase (pnpm start): pocketbase-typegen reads the schema
-# over the API as a superuser, not from data.db. It logs in with PB_ADMIN_*, the
-# same pair the init migration seeds into _superusers — so the values in
-# packages/scripts/.env.<stage>.local must match packages/database's file for
-# that stage, or the login 400s against an account that doesn't exist.
+# Requires a running PocketBase (pnpm start); pocketbase-typegen reads the
+# schema over the API as a superuser using PB_ADMIN_* from
+# packages/scripts/.env.<stage>.local, which must match packages/database's
+# credentials for that stage.
 #
-# Credentials are passed as flags rather than via typegen's own `--env` mode,
-# which insists on the names PB_TYPEGEN_EMAIL/PB_TYPEGEN_PASSWORD and would
-# resurrect the second, drifting copy of the admin identity.
+# Stage defaults to development; PB_ENV=production reads .env.production.local.
 #
-# Stage: development by default; PB_ENV=production reads .env.production.local
-# instead, so typegen can point at prod without editing files.
-#
-# Do not hand-edit the output file; it is overwritten.
+# The output file is overwritten on every run.
 
 set -l repo_root (git rev-parse --show-toplevel)
 source $repo_root/packages/scripts/scripts/config.fish
