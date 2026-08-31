@@ -1,0 +1,9 @@
+# Generated / local-only
+pb_data
+pb_data-prod-backup
+pb_hooks
+
+# Env
+.env
+.env.*
+!.env.example

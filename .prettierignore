@@ -5,6 +5,11 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Generated / local-only (packages/database)
+packages/database/pb_data/
+packages/database/pb_data-prod-backup/
+packages/database/pb_hooks/
+
 # Miscellaneous
 static/
 .svelte-kit/

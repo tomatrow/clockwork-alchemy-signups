@@ -1,0 +1,18 @@
+{
+	"name": "database",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"serve": "pocketbase serve --dev --dir=./pb_data --migrationsDir=./pb_migrations --hooksDir=./pb_hooks",
+		"build:hooks": "tsdown",
+		"dev:hooks": "tsdown --watch",
+		"migrate": "pocketbase migrate up --dir=./pb_data --migrationsDir=./pb_migrations",
+		"reset": "trash pb_data",
+		"reset:hard": "trash pb_data pb_hooks",
+		"start": "pnpm run reset; pnpm run migrate; pnpm run build:hooks; pnpm run serve",
+		"deploy": "./scripts/deploy.fish"
+	},
+	"devDependencies": {
+		"tsdown": "^0.22.7"
+	}
+}
