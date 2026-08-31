@@ -1,3 +1,4 @@
 [tools]
+"github:pocketbase/pocketbase" = "latest"
 node = "24"
 pnpm = "11"
