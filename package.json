@@ -2,10 +2,6 @@
 	"name": "@tomatrow/clockwork-alchemy-signups",
 	"version": "0.0.1",
 	"type": "module",
-	"packageManager": "pnpm@9.15.9",
-	"engines": {
-		"node": "20"
-	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
