@@ -3,8 +3,25 @@
 PocketBase: schema, hooks, and deploy. Replaces the Airtable base from
 `packages/www-old`.
 
-**Everything here is a stub.** The collections aren't modelled yet — see the
-TODOs in `pb_migrations/1788214630_init_schema.js`.
+## The model
+
+| Collection              | What                                                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users` (auth)          | OTP-only login (password auth disabled; the client creates accounts with a random throwaway password). `verified` flips on first OTP auth and gates signup updates.                          |
+| `workshops`             | Public read, superuser write. `options` is json `[{ value, imageURL }]`, hook-validated. Seeded with last year's 9 workshops mapped onto CA 2026 (Oct 16–18); **capacity 15 is a guess** — editors fix in the admin UI. |
+| `signups`               | **Append-only log.** Every action (register, cancel, rejoin, option change) is a new immutable event; update/delete rules are `null`. Current state = latest event per (user, workshop); confirmed-vs-waitlisted is **never stored** — queue position ranks by the oldest going-event since the last not-going, so option changes keep your spot, cancel-and-rejoin sends you to the back. Hook invariants: first event must be `going`, later events require `verified`, no-op appends are rejected, `signupsOpen` gates joining (never cancelling). |
+| `content`               | Singleton row of editable page content (logo, blurbs, `signupsOpen` kill switch). Create/delete locked; superusers edit in place.                                                            |
+| `workshop_availability` | View, public: confirmed / waitlisted counts per workshop.                                                                                                                                    |
+| `signup_status`         | View, owner-read: one row per (user, workshop) — latest intention/option + derived status and queue position. **The client reads this, never the raw log**; row id is the latest event's id, so key on user+workshop.                                          |
+
+**Emails**: every appended event is an explicit user action and emails —
+confirmation or waitlist for `going`, cancellation for `not-going`. Implicit
+changes (someone else's cancel promoting you off the waitlist) are silent, by
+decision. Transport is Cloudflare Email Service SMTP (see
+`.env.example`); unset means mail logs to the console.
+
+**Content editors are superusers**, by decision — they get the full admin UI,
+including schema and signup PII. Keep the circle small.
 
 ## Layout
 
@@ -152,7 +169,7 @@ locally with the prod env sourced and replaces the prod docker volume wholesale.
 pnpm --filter database deploy
 ```
 
-Currently a stub: rsync runs with `--dry-run` unless `DEPLOY_PB_LIVE=1`, and it
+rsync runs with `--dry-run` unless `DEPLOY_PB_LIVE=1`, and it
 aborts unless `DEPLOY_PB_HOST` / `DEPLOY_PB_UUID` / `PB_APP_URL` /
 `PB_ADMIN_USERNAME` / `PB_ADMIN_PASSWORD` are set in `.env.production.local`. It
 also refuses a localhost `PB_APP_URL`, which would otherwise get baked into
@@ -178,3 +195,8 @@ else, with no S3 and no backup cron configured. Two consequences:
 So either enable `settings.backups` (plus somewhere off-box to put them), or
 switch to additive migrations and drop the volume-replace step, before the first
 real signup. Until then, treat deploys as safe only while the database is empty.
+
+Now that content is edited **in prod's admin UI** (singleton `content`, workshop
+capacities, uploaded images in `pb_data/storage`), the flip has to happen
+**before editors start touching prod**, not merely before the first signup —
+a replace-style deploy erases their work too.
