@@ -6,6 +6,23 @@
       "extensions": [
         "+index.ts"
       ]
+    },
+    {
+      "source": "git:github.com/dmmulroy/pi-mcp",
+      "autoload": false,
+      "extensions": [
+        "+src/index.ts"
+      ]
     }
+  ],
+  "skills": [
+    "/Users/ajcaldwell/.pi/agent/skills/cloudflare/SKILL.md",
+    "+/Users/ajcaldwell/.pi/agent/skills/cloudflare/SKILL.md",
+    "/Users/ajcaldwell/.pi/agent/skills/cloudflare-email-service/SKILL.md",
+    "+/Users/ajcaldwell/.pi/agent/skills/cloudflare-email-service/SKILL.md",
+    "/Users/ajcaldwell/.pi/agent/skills/workers-best-practices/SKILL.md",
+    "+/Users/ajcaldwell/.pi/agent/skills/workers-best-practices/SKILL.md",
+    "/Users/ajcaldwell/.pi/agent/skills/wrangler/SKILL.md",
+    "+/Users/ajcaldwell/.pi/agent/skills/wrangler/SKILL.md"
   ]
 }
