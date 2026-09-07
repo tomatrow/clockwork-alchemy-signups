@@ -7,6 +7,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"deploy": "pnpm run build && wrangler deploy",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -15,7 +16,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@sveltejs/adapter-vercel": "next",
+		"@sveltejs/adapter-cloudflare": "8.0.0-next.6",
 		"@sveltejs/kit": "next",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@types/node": "^24",
@@ -31,7 +32,8 @@
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
-		"vite": "^8.0.16"
+		"vite": "^8.0.16",
+		"wrangler": "^4.129.0"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",

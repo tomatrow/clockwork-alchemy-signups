@@ -7,3 +7,6 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   svelte-preprocess: false
+  # Cloudflare's local Workers runtime; postinstall downloads the platform
+  # binary. Needed by wrangler / adapter-cloudflare's dev platform proxy.
+  workerd: true
