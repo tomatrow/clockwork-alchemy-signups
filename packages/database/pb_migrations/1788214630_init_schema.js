@@ -121,15 +121,9 @@ migrate(
 				{ type: "text", name: "slug", required: true },
 				{ type: "text", name: "name", required: true },
 				{ type: "editor", name: "description" },
-				{
-					type: "file",
-					name: "image",
-					maxSelect: 1,
-					maxSize: 10485760,
-					mimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"]
-				},
-				// Pool for option images; options[].imageURL references a
-				// filename from here (or "" / an external URL).
+				// The only image field: first file is the workshop's main image,
+				// the rest are the pool options[].imageURL references by filename
+				// (or "" / an external URL).
 				{
 					type: "file",
 					name: "images",
@@ -380,7 +374,7 @@ migrate(
 			{
 				slug: "clockwork-pendant-device",
 				name: "Clockwork Pendant Device",
-				image: "clockwork-pendant-device.jpeg",
+				images: ["clockwork-pendant-device.jpeg"],
 				start: "2026-10-16 21:30:00.000Z", // Fri 2:30 PM PDT
 				end: "2026-10-16 23:00:00.000Z", // Fri 4:00 PM PDT
 				cost: "$5",
@@ -395,7 +389,7 @@ migrate(
 			{
 				slug: "pearly-kings-and-queens",
 				name: "The Magic of the London Pearly Kings and Queens",
-				image: null,
+				images: [],
 				start: "2026-10-16 23:00:00.000Z", // Fri 4:00 PM PDT
 				end: "2026-10-17 00:30:00.000Z", // Fri 5:30 PM PDT
 				cost: "$15",
@@ -411,7 +405,7 @@ migrate(
 			{
 				slug: "make-a-steampunk-medal",
 				name: "Make a Steampunk Medal",
-				image: "make-a-steampunk-medal.jpeg",
+				images: ["make-a-steampunk-medal.jpeg"],
 				start: "2026-10-17 00:30:00.000Z", // Fri 5:30 PM PDT
 				end: "2026-10-17 02:00:00.000Z", // Fri 7:00 PM PDT
 				cost: "$15",
@@ -425,7 +419,7 @@ migrate(
 			{
 				slug: "steampunk-bugs",
 				name: "Steampunk Bugs",
-				image: "steampunk-bugs.jpeg",
+				images: ["steampunk-bugs.jpeg"],
 				start: "2026-10-17 16:00:00.000Z", // Sat 9:00 AM PDT
 				end: "2026-10-17 17:30:00.000Z", // Sat 10:30 AM PDT
 				cost: "$7",
@@ -437,7 +431,7 @@ migrate(
 			{
 				slug: "pin-a-butterfly",
 				name: "Pin a Butterfly!",
-				image: null,
+				images: [],
 				start: "2026-10-17 19:00:00.000Z", // Sat 12:00 PM PDT
 				end: "2026-10-17 20:30:00.000Z", // Sat 1:30 PM PDT
 				cost: "$15",
@@ -451,7 +445,7 @@ migrate(
 			{
 				slug: "introduction-to-bobbin-lace",
 				name: "Introduction to Bobbin Lace",
-				image: "introduction-to-bobbin-lace.jpeg",
+				images: ["introduction-to-bobbin-lace.jpeg"],
 				start: "2026-10-18 01:00:00.000Z", // Sat 6:00 PM PDT
 				end: "2026-10-18 02:30:00.000Z", // Sat 7:30 PM PDT
 				cost: "$0",
@@ -464,7 +458,7 @@ migrate(
 			{
 				slug: "build-an-engine-box",
 				name: "Build an Engine Box",
-				image: "build-an-engine-box.jpeg",
+				images: ["build-an-engine-box.jpeg"],
 				start: "2026-10-18 16:00:00.000Z", // Sun 9:00 AM PDT
 				end: "2026-10-18 17:30:00.000Z", // Sun 10:30 AM PDT
 				cost: "$20",
@@ -479,7 +473,7 @@ migrate(
 			{
 				slug: "victorian-hat-pins",
 				name: "Victorian Hat Pins",
-				image: "victorian-hat-pins.jpeg",
+				images: ["victorian-hat-pins.jpeg"],
 				start: "2026-10-18 17:30:00.000Z", // Sun 10:30 AM PDT
 				end: "2026-10-18 19:00:00.000Z", // Sun 12:00 PM PDT
 				cost: "$15",
@@ -495,7 +489,7 @@ migrate(
 			{
 				slug: "frame-your-butterfly",
 				name: "Frame your butterfly",
-				image: null,
+				images: [],
 				start: "2026-10-18 19:00:00.000Z", // Sun 12:00 PM PDT
 				end: "2026-10-18 20:30:00.000Z", // Sun 1:30 PM PDT
 				cost: "$5",
@@ -521,7 +515,11 @@ migrate(
 			record.set("cost", seed.cost)
 			record.set("paymentInstructions", seed.paymentInstructions)
 			record.set("options", "[]")
-			if (seed.image) record.set("image", $filesystem.fileFromPath(`seed/images/${seed.image}`))
+			if (seed.images.length > 0)
+				record.set(
+					"images",
+					seed.images.map((file) => $filesystem.fileFromPath(`seed/images/${file}`))
+				)
 			app.save(record)
 		}
 	},
