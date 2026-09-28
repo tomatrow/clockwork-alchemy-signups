@@ -7,18 +7,74 @@ PocketBase: schema, hooks, and deploy. Replaces the Airtable base from
 
 | Collection              | What                                                                                                                                                                                        |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `users` (auth)          | OTP-only login (password auth disabled; the client creates accounts with a random throwaway password). `verified` flips on first OTP auth and gates signup updates.                          |
+| `users` (auth)          | The signup form creates the account with a random throwaway password and immediately `authWithPassword`s once to get a token — no email round-trip on the first visit. Password auth is enabled for that single call; there is no password UI. Returning users sign in with OTP. On the first OTP PocketBase itself sets a fresh random password, which rotates `tokenKey` and kills every token issued before verification (see [Pre-hijack](#pre-hijack)). Tokens last 90 days. The only PocketBase email users get is the OTP code (plus email change): login alerts, password reset and verification mails are off (see [Email abuse](#email-abuse)). |
 | `workshops`             | Public read, superuser write. `options` is json `[{ value, imageURL }]`, hook-validated. Seeded with last year's 9 workshops mapped onto CA 2026 (Oct 16–18); **capacity 15 is a guess** — editors fix in the admin UI. |
-| `signups`               | **Append-only log.** Every action (register, cancel, rejoin, option change) is a new immutable event; update/delete rules are `null`. Current state = latest event per (user, workshop); confirmed-vs-waitlisted is **never stored** — queue position ranks by the oldest going-event since the last not-going, so option changes keep your spot, cancel-and-rejoin sends you to the back. Hook invariants: first event must be `going`, later events require `verified`, no-op appends are rejected, `signupsOpen` gates joining (never cancelling). |
+| `signups`               | **Append-only log.** Every action (register, cancel, rejoin, option change) is a new immutable event; update/delete rules are `null`. Current state = latest event per (user, workshop); confirmed-vs-waitlisted is **never stored** — queue position ranks by the oldest going-event since the last not-going, so option changes keep your spot, cancel-and-rejoin sends you to the back. Hook invariants: first event must be `going`, no-op appends are rejected, joining is refused when `signupsOpen` is false or the workshop has `end`ed (cancelling never is). |
 | `content`               | Singleton row of editable page content (logo, blurbs, `signupsOpen` kill switch). Create/delete locked; superusers edit in place.                                                            |
+| `transactional_emails`  | Outbox, superuser-only. The SvelteKit server renders the confirmation email and creates a row; the hook sends it after commit and stamps `sentAt` or `error`. No auto-retry: tick `resend` in the admin UI. Capped at 3 per address per 24h (see [Email abuse](#email-abuse)). |
 | `workshop_availability` | View, public: confirmed / waitlisted counts per workshop.                                                                                                                                    |
 | `signup_status`         | View, owner-read: one row per (user, workshop) — latest intention/option + derived status and queue position. **The client reads this, never the raw log**; row id is the latest event's id, so key on user+workshop.                                          |
 
-**Emails**: every appended event is an explicit user action and emails —
-confirmation or waitlist for `going`, cancellation for `not-going`. Implicit
+**Emails**: one summary per submission, listing the user's whole current
+state, rendered by the SvelteKit server (svelty-email) and queued in
+`transactional_emails`. Signup events themselves send nothing. Implicit
 changes (someone else's cancel promoting you off the waitlist) are silent, by
-decision. Transport is Cloudflare Email Service SMTP (see
-`.env.example`); unset means mail logs to the console.
+decision. Transport is Cloudflare Email Service SMTP (see `.env.example`);
+unset means mail logs to the console. OTP emails are PocketBase's own.
+
+### Pre-hijack
+
+Anyone can create an account for any email (that is the point of the no-OTP
+first visit), so the account for `you@example.com` may have been created — and
+its token held — by someone who is not you. Two things contain that:
+
+- `apis/record_auth_with_otp.go`: on the first successful OTP, PocketBase sets
+  `verified` **and calls `SetRandomPassword()`**, explicitly "in case the OTP is
+  used on its own since this makes it less error prone to pre-hijacking".
+- `core.onRecordSaveExecute`: a password change regenerates `tokenKey`, which
+  invalidates every previously issued token for that record.
+
+So the moment the inbox owner signs in, whoever created the account is locked
+out. Until then, the creator can edit "their" signups — which is the same
+exposure as last year's site, where nothing was verified at all. No hook of
+ours is involved; if PocketBase ever changes that behaviour, add one.
+
+### Email abuse
+
+The same open account creation means anyone can make us email any address.
+These keep that from turning into a spam relay:
+
+- **PocketBase's own user emails are off**, except OTP. Password auth being
+  on (for the first-visit sign-in) means whoever created an account knows its
+  password, and PocketBase would otherwise mail the address on their behalf:
+  - login alerts: `users.authAlert.enabled = false` in the init migration
+    (each `authWithPassword` with a new User-Agent was a "Login from a new
+    location" email);
+  - password reset and verification: `src/hooks/users.pb.ts` drops the mail at
+    send time. The endpoints still answer 204 for every address, so nothing
+    reveals which emails have accounts.
+
+  Superusers are untouched: editors keep password reset and login alerts.
+
+- **Outbox**: the `transactional_emails` hook allows at most 3 rows per `to`
+  per rolling 24h (failed sends and editor `resend` don't count) and throws a
+  429 otherwise, which the site shows as "already emailed you 3 times today".
+- **OTP**: PocketBase's built-in per-address cap (after 10 unexpired OTPs it
+  reuses the last one without emailing). **Off under `--dev`**, so prod must
+  not run with it.
+- **Rate limiter** (per IP, guests only): `users:create`, `*:requestOTP`,
+  `users:authWithPassword`, `users:authWithOTP`, plus `/api/batch`. No
+  catch-all `/api/` rule and no `*:auth`: SSR and the admin client's
+  `_superusers` login come from shared Cloudflare Worker IPs and would
+  throttle the whole site. Client IP comes from `CF-Connecting-IP`, which is
+  only trustworthy while the origin is reachable solely through Cloudflare.
+
+**Accepted, uncapped: email change.** `requestEmailChange` has no per-address
+or per-account limit, none of the rate-limit rules cover it (it is an
+authenticated call), and with password auth anyone can get a token. So anyone
+can make PocketBase send its "confirm your new email" message to any address,
+as often as they like. The template carries no attacker-supplied text; the
+exposure is volume (inbox flooding, sender reputation). Left on by decision.
 
 **Content editors are superusers**, by decision — they get the full admin UI,
 including schema and signup PII. Keep the circle small.
@@ -121,10 +177,13 @@ up` does _not_ work: PocketBase refuses to delete the only existing superuser,
 ## Batch API
 
 `settings.batch.enabled = true` in the init migration is **required**, not tuning:
-`runic-pocketbase-collection` routes every optimistic write through a single
+the signup form appends all of a submission's events through a single
 transactional `POST /api/batch`, and PocketBase ships that endpoint disabled. If
-you ever see all mutations failing while single-record reads are fine, check this
+you ever see submissions failing while single-record reads are fine, check this
 first — the failure surfaces at the endpoint, so it looks like a client bug.
+
+Note PocketBase caps passwords at 71 characters; the throwaway the form
+generates is one UUID, not two.
 
 No S3, by decision: uploaded files and backups live on the local PocketBase
 volume.

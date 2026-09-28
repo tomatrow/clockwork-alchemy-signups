@@ -1,5 +1,8 @@
 packages:
   - packages/*
+# Every dependency is pinned exactly; `pnpm add` keeps it that way. Bump
+# deliberately — kit/adapter-cloudflare pre-releases must move together.
+saveExact: true
 allowBuilds:
   "@parcel/watcher": true
   # pocketbase-typegen's sqlite path (reading data.db directly). We use its

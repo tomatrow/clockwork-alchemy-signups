@@ -21,6 +21,9 @@
 #     pb_data-prod-backup/ below is the only copy — and the NEXT deploy
 #     overwrites it. Safe only while prod is empty; see the durability caveat in
 #     the README before that stops being true.
+#   - The prod container must NOT run `pocketbase serve --dev`: --dev turns off
+#     PocketBase's built-in per-address OTP limit, which is the only cap on OTP
+#     emails to a single address (anyone can create an account for any email).
 #   - Remote logs in as a non-root user; rsync runs as root on the far side via
 #     --rsync-path="sudo rsync" (passwordless sudo, standard Coolify setup) so it
 #     can reach the root-owned /var/lib/docker/volumes paths.

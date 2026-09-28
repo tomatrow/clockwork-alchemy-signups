@@ -7,6 +7,6 @@
 		"kill-pb": "./scripts/kill-pb.fish"
 	},
 	"devDependencies": {
-		"pocketbase-typegen": "^1.5.0"
+		"pocketbase-typegen": "1.5.0"
 	}
 }

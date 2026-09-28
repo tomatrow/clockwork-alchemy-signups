@@ -2,13 +2,15 @@
 
 // signups is an APPEND-ONLY LOG: every user action (register, cancel, rejoin,
 // option change) is a new immutable event. updateRule/deleteRule are null;
-// these hooks enforce the invariants API rules cannot express, and send the
-// emails.
+// this hook enforces the invariants API rules cannot express.
 //
 // Current state and confirmed/waitlisted are NEVER stored — they derive from
 // the log (see the signup_status view: position ranks by the oldest going-
 // event since your last not-going, so option changes keep your spot and only
 // cancelling loses it).
+//
+// Emails are NOT sent from here. The SvelteKit server renders one summary of
+// the user's whole submission and drops it in transactional_emails.
 //
 // JSVM rules: handler bodies are re-evaluated standalone — no module-scope
 // bindings, no async, everything inlined.
@@ -38,20 +40,23 @@ onRecordCreateRequest((e) => {
 		throw new BadRequestError("You are not signed up for this workshop.")
 	}
 
-	// anything after the first event requires a proven email (OTP → verified)
-	if (current && !e.auth?.getBool("verified")) {
-		throw new ForbiddenError("Verify your email before changing a signup.")
-	}
-
-	// the kill switch gates joining, never cancelling
 	if (intention === "going") {
+		// the kill switch gates joining, never cancelling
 		const content = e.app.findFirstRecordByFilter("content", "id != ''")
 		if (!content.getBool("signupsOpen")) {
 			throw new BadRequestError("Signups are closed.")
 		}
 
-		// option must be one of the workshop's options (or empty when none)
 		const workshop = e.app.findRecordById("workshops", workshopId)
+
+		// no joining a workshop that has already ended (no deadlines beyond
+		// that, by decision). Cancelling stays possible forever.
+		const end = workshop.getString("end")
+		if (end && new Date(end).getTime() < Date.now()) {
+			throw new BadRequestError("This workshop has already ended.")
+		}
+
+		// option must be one of the workshop's options (or empty when none)
 		const option = record.getString("option")
 		const options = JSON.parse(workshop.getString("options") || "[]") as { value: string }[]
 		if (options.length > 0) {
@@ -66,7 +71,7 @@ onRecordCreateRequest((e) => {
 		record.set("option", "")
 	}
 
-	// reject no-op appends (double-clicks): no state change, no email
+	// reject no-op appends (double-clicks): no state change
 	if (
 		current &&
 		current.getString("intention") === intention &&
@@ -74,66 +79,6 @@ onRecordCreateRequest((e) => {
 	) {
 		throw new BadRequestError("Nothing changed.")
 	}
-
-	e.next()
-}, "signups")
-
-// after create: every appended event is an explicit user action, so every
-// append emails — confirmation or waitlist for going (read straight off the
-// signup_status view, whose row id IS this latest event), cancellation for
-// not-going. Implicit changes (someone else's cancel promoting you) stay
-// silent, by decision.
-onRecordAfterCreateSuccess((e) => {
-	const record = e.record
-	if (!record) return e.next()
-
-	const workshop = e.app.findRecordById("workshops", record.getString("workshop"))
-	const user = e.app.findRecordById("users", record.getString("user"))
-	const settings = e.app.settings()
-	const name = workshop.getString("name")
-	const from = {
-		address: settings.meta.senderAddress,
-		name: settings.meta.senderName
-	}
-
-	if (record.getString("intention") === "not-going") {
-		e.app.newMailClient().send(
-			new MailerMessage({
-				from,
-				to: [{ address: user.email() }],
-				subject: `Cancelled: ${name}`,
-				html:
-					`<p>Your signup for <strong>${name}</strong> is cancelled.</p>` +
-					`<p>Changed your mind? You can rejoin from the signup page —` +
-					` you'll go to the back of the line.</p>`
-			})
-		)
-		return e.next()
-	}
-
-	// going: this record is the latest event, so it is the view row's id
-	const status = e.app.findRecordById("signup_status", record.id)
-	const confirmed = status.getString("status") === "confirmed"
-	const position = status.getInt("position")
-	const capacity = workshop.getInt("capacity")
-	const option = record.getString("option")
-	const optionLine = option ? `<p>Your selection: ${option}</p>` : ""
-
-	e.app.newMailClient().send(
-		new MailerMessage({
-			from,
-			to: [{ address: user.email() }],
-			subject: confirmed ? `Confirmed: ${name}` : `Waitlisted: ${name}`,
-			html: confirmed
-				? `<p>You have a spot in <strong>${name}</strong>.</p>` +
-					optionLine +
-					`<p>${workshop.getString("start")} @ ${workshop.getString("location")}</p>` +
-					`<p>Cost: ${workshop.getString("cost")} ${workshop.getString("paymentInstructions")}</p>`
-				: `<p>You are #${position - capacity} on the waitlist for <strong>${name}</strong>.</p>` +
-					optionLine +
-					`<p>If a spot opens up, it's yours automatically — check your status on the signup page.</p>`
-		})
-	)
 
 	e.next()
 }, "signups")

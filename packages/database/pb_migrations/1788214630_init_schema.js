@@ -4,9 +4,16 @@
 // Values read from $os.getenv are baked into data.db at migrate time.
 //
 // Model (decided 2026-09, see log.md):
-//   users     auth, OTP-only login (password auth disabled; the client creates
-//             accounts with a random throwaway password). `verified` flips on
-//             first successful OTP auth and gates signup updates.
+//   users     auth. The signup form creates the account with a random
+//             throwaway password and immediately authenticates with it, so
+//             the first submission needs no email round-trip. Password auth
+//             is enabled for that one call only — it is never a login UI.
+//             Returning users sign in with OTP; PocketBase flips `verified`
+//             and (its own doing) rotates the password + tokenKey, which
+//             invalidates every token issued before verification.
+//             The only PocketBase email users get is the OTP code (plus
+//             email change): login alerts are off here, password reset and
+//             verification mails are suppressed in src/hooks/users.pb.ts.
 //   workshops public read, superuser write. Options are a json array of
 //             { value, imageURL } validated by a hook.
 //   signups   APPEND-ONLY LOG. Every user action (register, cancel, rejoin,
@@ -18,6 +25,9 @@
 //             changes keep your spot and only cancelling loses it (rejoin =
 //             back of the queue).
 //   content   singleton row of editable page content (create/delete locked).
+//   transactional_emails
+//             outbox. The SvelteKit server renders the confirmation email and
+//             creates a row; a hook sends it and stamps sentAt/error.
 //   views     workshop_availability (public counts),
 //             signup_status (owner-read derived status).
 
@@ -54,11 +64,36 @@ migrate(
 			console.log(">> SMTP env unset: mail will log to the console. See .env.example.")
 		}
 
-		// Batch API is disabled by default in PocketBase but required by
-		// runic-pocketbase-collection's transactional mutations.
+		// Batch API is disabled by default in PocketBase; the signup form
+		// appends all of a submission's events in one transactional batch.
 		settings.batch.enabled = true
 		settings.batch.maxRequests = 50
 		settings.batch.timeout = 3
+
+		// Rate limiting (per client IP). Only the abuse paths the browser hits
+		// directly, as guests: account creation (anyone can create an account
+		// for any address) and the auth/OTP endpoints. Deliberately NO catch-all
+		// like the default "/api/" rule: SSR runs on Cloudflare Workers, so every
+		// page load and the admin client's _superusers login arrive from shared
+		// Worker IPs and would throttle the whole site as one client. Hence also
+		// `users:` rather than `*:` on the auth rules. Superuser-authed requests
+		// skip the limiter entirely. Per-address caps live elsewhere: PocketBase's
+		// built-in OTP reuse (disabled under --dev!) and the transactional_emails
+		// hook (3/day).
+		settings.rateLimits.enabled = true
+		settings.rateLimits.rules = [
+			{ label: "users:create", audience: "@guest", duration: 60, maxRequests: 5 },
+			{ label: "*:requestOTP", audience: "@guest", duration: 60, maxRequests: 3 },
+			{ label: "users:authWithPassword", audience: "@guest", duration: 60, maxRequests: 5 },
+			{ label: "users:authWithOTP", audience: "@guest", duration: 60, maxRequests: 5 },
+			{ label: "*:create", audience: "@guest", duration: 5, maxRequests: 20 },
+			// signed-in browsers submit their signups as one batch, direct to PB
+			{ label: "/api/batch", audience: "", duration: 1, maxRequests: 3 }
+		]
+		// PocketBase sits behind Cloudflare's proxy; without this every client
+		// is Cloudflare's IP. Only safe if the origin isn't reachable directly
+		// (otherwise the header is spoofable).
+		settings.trustedProxy.headers = ["CF-Connecting-IP"]
 
 		// No S3: files and backups stay on the local PocketBase volume.
 		// TODO: enable settings.backups (plus somewhere off-box to put them)
@@ -91,14 +126,28 @@ migrate(
 		}
 
 		// ------------------------------------------------------------------
-		// users: OTP-only auth
+		// users
 		// ------------------------------------------------------------------
 		const users = app.findCollectionByNameOrId("users")
-		// Login is exclusively "enter the code we emailed you". Accounts are
-		// still CREATED with a password (PocketBase requires one) — the client
-		// generates a random throwaway that is never shown or usable.
-		users.passwordAuth.enabled = false
+		// First visit: the form creates the account with a random throwaway
+		// password and calls authWithPassword once to get a token — no email
+		// round-trip. Nobody ever types a password; there is no password UI.
+		//
+		// Return visit: OTP. On the first successful OTP PocketBase marks the
+		// record verified AND sets a new random password, which regenerates
+		// tokenKey (core.onRecordSaveExecute) — so a token minted by whoever
+		// created the account (possibly not the inbox owner) dies the moment
+		// the inbox owner signs in. No custom hook needed for that.
+		users.passwordAuth.enabled = true
 		users.otp.enabled = true
+		// No "Login from a new location" emails: the throwaway-password login
+		// can be replayed by whoever created the account, with a new User-Agent
+		// each time, and each one would mail the address. Password reset and
+		// verification mails are suppressed in src/hooks/users.pb.ts.
+		users.authAlert.enabled = false
+		// Long sessions: signups open well before the con and "keep me signed
+		// in" is the intent. 90 days.
+		users.authToken.duration = 90 * 24 * 60 * 60
 		users.listRule = "id = @request.auth.id"
 		users.viewRule = "id = @request.auth.id"
 		users.createRule = "" // public: the signup form creates unverified accounts
@@ -152,8 +201,8 @@ migrate(
 		// ------------------------------------------------------------------
 		// signups: append-only event log — no updates, no deletes, ever.
 		// The hook enforces log invariants that rules cannot express: first
-		// event must be going, later events require a verified email, no-op
-		// appends are rejected, signupsOpen gates joining (never cancelling).
+		// event must be going, no-op appends are rejected, joining is gated by
+		// signupsOpen and by the workshop not having ended (cancelling never is).
 		// ------------------------------------------------------------------
 		const signups = new Collection({
 			type: "base",
@@ -219,6 +268,46 @@ migrate(
 			]
 		})
 		app.save(content)
+
+		// ------------------------------------------------------------------
+		// transactional_emails: outbox. Only the SvelteKit server (as a
+		// superuser) writes rows; the hook sends on create and stamps
+		// sentAt or error. A failed row is the retry queue — editors resend
+		// from the admin UI by clearing `error` and re-saving with `resend`.
+		// ------------------------------------------------------------------
+		const transactionalEmails = new Collection({
+			type: "base",
+			name: "transactional_emails",
+			listRule: null,
+			viewRule: null,
+			createRule: null,
+			updateRule: null,
+			deleteRule: null,
+			fields: [
+				{
+					type: "relation",
+					name: "user",
+					maxSelect: 1,
+					cascadeDelete: false,
+					collectionId: users.id
+				},
+				{ type: "email", name: "to", required: true },
+				{ type: "text", name: "subject", required: true },
+				// Explicit max: a text field with no max gets PocketBase's default
+				// 5000 chars, which a rendered email with ~5 workshops exceeds (all 9
+				// is ~14KB). 100k sits just under where Gmail clips a message (~102KB).
+				{ type: "text", name: "html", required: true, max: 100_000 },
+				{ type: "text", name: "text", max: 100_000 },
+				{ type: "date", name: "sentAt" },
+				// The hook truncates to this so saving an error can't itself fail.
+				{ type: "text", name: "error", max: 10_000 },
+				// Flip to true in the admin UI to send again; the hook clears it.
+				{ type: "bool", name: "resend" },
+				{ type: "autodate", name: "created", onCreate: true },
+				{ type: "autodate", name: "updated", onCreate: true, onUpdate: true }
+			]
+		})
+		app.save(transactionalEmails)
 
 		// ------------------------------------------------------------------
 		// views (see .agents/skills/pocketbase-view-collections)
@@ -526,7 +615,14 @@ migrate(
 	(app) => {
 		// Drops what the up migration created (views first: they read the
 		// base tables). The users collection keeps its modified options.
-		for (const name of ["signup_status", "workshop_availability", "signups", "content", "workshops"]) {
+		for (const name of [
+			"signup_status",
+			"workshop_availability",
+			"transactional_emails",
+			"signups",
+			"content",
+			"workshops"
+		]) {
 			try {
 				app.delete(app.findCollectionByNameOrId(name))
 			} catch {
