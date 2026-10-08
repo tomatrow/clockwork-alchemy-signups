@@ -7,7 +7,9 @@ here is imported by another package — these are entry points.
 
 Run from the repo root:
 
-- `pnpm start` → `scripts/start.fish` — the dev loop in tmux. Three panes:
+- `pnpm start` → `scripts/start.fish` — the dev loop. Run it from an empty tmux
+  window; it splits that window into three panes, and the pane you ran it in
+  becomes top-left:
   | pane | cwd | command |
   | --- | --- | --- |
   | top-left | `packages/database` | `pnpm start` — reset + migrate + build hooks + serve on `:8090` |
@@ -46,9 +48,10 @@ database-package script.
   every pane via `--preamble`. Panes are fresh interactive shells, so they get
   neither the functions nor `mise activate` otherwise — and without mise there
   is no `pocketbase` on PATH.
-- **`tmux_dev_panes` only ever addresses pane `-t 0`.** tmux renumbers panes on
-  every split, so creation order is not index order; everything else relies on
-  `split-window` acting on the currently active pane. Get this wrong and a pane
+- **`tmux_dev_panes` addresses panes by id (`%N`), never by index.** tmux
+  renumbers indices on every split, so creation order is not index order; ids
+  are stable. The calling pane is `$TMUX_PANE`, and each `split-window -d -P`
+  prints the new pane's id. Use indices or rely on the active pane and a pane
   splits the wrong neighbour — it looks plausible until you notice which command
   landed where.
 - **Its flags are declared `=`, never `=?`.** fish accepts an optional-value
@@ -59,13 +62,17 @@ database-package script.
   so starting it early would wipe `pb_hooks/` out from under the initial
   `build:hooks` that the left pane does before serving. Once running, a tsdown
   rebuild is what trips PocketBase's own restart-on-change.
-- `start.fish` `cd`s to the git root first, so it works from any subdirectory.
-- **The session is named `clockwork`**, so clean up with
-  `tmux kill-session -t clockwork` — never `tmux kill-server`, which takes out
-  every unrelated session on the machine.
-- `start.fish --detached` builds the session without attaching, for use from a
-  non-tty (CI, a script, an agent); the attaching form fails there with
-  "open terminal failed: not a terminal".
+- `start.fish` `cd`s to the git root first, so it works from any subdirectory,
+  and the preamble `cd`s every pane there too (the left pane would otherwise
+  keep whatever directory you ran it from).
+- **The left pane's command is typed into the pane running the script.** The
+  keys queue up until `pnpm start` exits, then that shell runs them like any
+  other typed command, so in every pane Ctrl-C then up-arrow re-runs just that
+  pane's step. That `send-keys` must stay the script's last action: anything
+  after it that reads stdin would swallow them.
+- **It refuses a window that already has more than one pane** (e.g. re-running
+  `pnpm start` in the left pane), rather than stacking a second set. It also
+  refuses outside tmux; there is no detached mode anymore.
 - **Env values are read at migrate time and the migration guards each one**, so
   a clone with no `packages/database/.env.*.local` still boots. Note that
   `meta.appURL` is _validated_ by PocketBase — assigning it a blank
