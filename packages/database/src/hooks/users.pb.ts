@@ -16,7 +16,8 @@
 // default handler, which is the one that mails.
 //
 // Tagged "users" only: editors are superusers and still need password reset
-// and login alerts for the admin UI.
+// for the admin UI. (Their login alerts are off via `_superusers.authAlert`
+// in the migration.)
 
 // no password UI, so a reset link is useless to a user and only an abuse vector
 onMailerRecordPasswordResetSend(() => {}, "users")

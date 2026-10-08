@@ -105,6 +105,13 @@ migrate(
 		// superuser (admin UI + pocketbase-typegen login; also the content
 		// editors' login — editors are superusers, by decision)
 		// ------------------------------------------------------------------
+		// No "Login from a new location" emails for editors either: SSR and the
+		// admin client log in from shared Cloudflare Worker IPs, so nearly every
+		// login looked new and mailed the editor.
+		const superusers = app.findCollectionByNameOrId("_superusers")
+		superusers.authAlert.enabled = false
+		app.save(superusers)
+
 		const adminEmail = $os.getenv("PB_ADMIN_USERNAME")
 		const adminPassword = $os.getenv("PB_ADMIN_PASSWORD")
 
@@ -112,7 +119,7 @@ migrate(
 			if (adminPassword.length < 10)
 				throw new Error("PB_ADMIN_PASSWORD must be at least 10 characters")
 
-			const superuser = new Record(app.findCollectionByNameOrId("_superusers"))
+			const superuser = new Record(superusers)
 			superuser.set("email", adminEmail)
 			// setPassword hashes and sets tokenKey; set("password") would not.
 			superuser.setPassword(adminPassword)

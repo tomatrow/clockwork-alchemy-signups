@@ -54,7 +54,10 @@ These keep that from turning into a spam relay:
     send time. The endpoints still answer 204 for every address, so nothing
     reveals which emails have accounts.
 
-  Superusers are untouched: editors keep password reset and login alerts.
+  Superusers keep password reset, but their login alerts are off too
+  (`_superusers.authAlert.enabled = false` in the init migration): SSR and the
+  admin client log in from shared Cloudflare Worker IPs, so nearly every login
+  looked like a new location.
 
 - **Outbox**: the `transactional_emails` hook allows at most 3 rows per `to`
   per rolling 24h (failed sends and editor `resend` don't count) and throws a
