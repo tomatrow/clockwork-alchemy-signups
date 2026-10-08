@@ -441,7 +441,7 @@ migrate(
 		// seed: content singleton
 		// ------------------------------------------------------------------
 		const contentRecord = new Record(content)
-		contentRecord.set("logo", $filesystem.fileFromPath("seed/images/logo.png"))
+		contentRecord.set("logo", $filesystem.fileFromPath("seed/images/logo.jpg"))
 		contentRecord.set(
 			"signupPreBlurb",
 			"<p>This is a selection of workshops that require registration, see the" +
@@ -452,7 +452,7 @@ migrate(
 			"confirmationFooter",
 			"<p>See you at the con! Questions? Reply to your confirmation email.</p>"
 		)
-		contentRecord.set("scheduleUrl", "https://www.clockworkalchemy.com/")
+		contentRecord.set("scheduleUrl", "https://schedule.clockworkalchemy.com/")
 		contentRecord.set("signupsOpen", true)
 		app.save(contentRecord)
 
