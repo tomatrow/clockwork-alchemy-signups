@@ -6,13 +6,6 @@
       "extensions": [
         "+index.ts"
       ]
-    },
-    {
-      "source": "git:github.com/dmmulroy/pi-mcp",
-      "autoload": false,
-      "extensions": [
-        "+src/index.ts"
-      ]
     }
   ],
   "skills": [
