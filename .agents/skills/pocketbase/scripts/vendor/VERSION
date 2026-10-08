@@ -1,0 +1,1 @@
+pocketbase JS SDK v0.28.1 — https://github.com/pocketbase/js-sdk (MIT). Copied (only the sourceMappingURL comment removed) from the npm package's dist/ so the skill needs no npm install. To upgrade: npm pack pocketbase, copy dist/pocketbase.es.mjs and dist/pocketbase.es.d.mts here, and update this line.
