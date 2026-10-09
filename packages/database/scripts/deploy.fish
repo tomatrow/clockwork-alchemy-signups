@@ -96,7 +96,10 @@ end
 
 # --- build ---------------------------------------------------------------
 echo ">> building fresh data.db (reset -> migrate up) + hooks with prod env baked in"
-pnpm --filter database reset; or true # nothing to trash on a clean tree
+# reset exits 0 when pb_data is already absent, non-zero when a local
+# PocketBase is serving it. Must abort then: migrate would no-op against the
+# live DEV data.db and we'd ship that (dev superuser, localhost appURL) to prod.
+pnpm --filter database reset; or exit 1
 pnpm --filter database migrate; or exit 1
 pnpm --filter database build:hooks; or exit 1
 

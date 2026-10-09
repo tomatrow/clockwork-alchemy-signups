@@ -6,13 +6,16 @@
 	"compatibility_flags": ["nodejs_als"],
 	"routes": [
 		{
-			"pattern": "clockwork-alchemy-signups.ajcaldwell.dev",
+			"pattern": "clockworkalchemy.info",
 			"custom_domain": true
 		}
 	],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
+	},
+	"vars": {
+		"PUBLIC_POCKETBASE_URL": "https://pocketbase.clockworkalchemy.info"
 	},
 	"observability": {
 		"enabled": true
